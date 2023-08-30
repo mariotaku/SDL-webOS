@@ -18,17 +18,14 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
+#include "../SDL_internal.h"
 
-#ifndef SDL_waylandwebos_h_
-#define SDL_waylandwebos_h_
+#include "../../include/SDL_scancode.h"
 
-#include "../../SDL_internal.h"
-#include "SDL_waylandwindow.h"
+#if SDL_VIDEO_DRIVER_WAYLAND_WEBOS
 
-#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
-
-extern int WaylandWebOS_SetupSurface(SDL_WindowData *data);
+extern SDL_Scancode SDL_GetWebOSScancode(int keycode);
 
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
-#endif /* SDL_waylandwebos_h_ */
+/* vi: set ts=4 sw=4 expandtab: */

@@ -1994,9 +1994,6 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
 {
     SDL_WindowData *data;
     SDL_VideoData *c;
-#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
-    const char *appId;
-#endif
 
     data = SDL_calloc(1, sizeof(*data));
     if (data == NULL) {
@@ -2088,14 +2085,11 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
     }
     if (c->shell.webos) {
         data->shell_surface.webos = wl_webos_shell_get_shell_surface(c->shell.webos, data->surface);
+        wl_webos_shell_surface_set_user_data(data->shell_surface.webos, data);
         if (data->shell_surface.webos == NULL) {
             return SDL_SetError("Can't create webos shell surface");
         }
-        appId = SDL_getenv("APPID");
-        if (appId == NULL) {
-            return SDL_SetError("APPID environment variable is not set");
-        }
-        wl_webos_shell_surface_set_property(data->shell_surface.webos, "appId", appId);
+        WaylandWebOS_SetupSurface(data);
     }
 #endif
 

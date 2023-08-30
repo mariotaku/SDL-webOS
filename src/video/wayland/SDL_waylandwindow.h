@@ -120,6 +120,9 @@ typedef struct
     SDL_bool is_fullscreen;
     SDL_bool in_fullscreen_transition;
     Uint32 fullscreen_flags;
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    Uint32 webos_cursor_sleep_time;
+#endif
 } SDL_WindowData;
 
 extern void Wayland_ShowWindow(_THIS, SDL_Window *window);
