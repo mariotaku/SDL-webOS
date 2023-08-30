@@ -116,6 +116,9 @@ static struct
     struct udev_monitor *m_pUdevMonitor;
     int m_nUdevFd;
 #endif
+#if defined(__WEBOS__)
+    Uint32 m_unIgnoreInotifyOpenCount;
+#endif
 } SDL_HIDAPI_discovery;
 
 #if defined(__WIN32__) || defined(__WINGDK__)
@@ -227,6 +230,7 @@ static void HIDAPI_InitializeDiscovery()
     SDL_HIDAPI_discovery.m_unDeviceChangeCounter = 1;
     SDL_HIDAPI_discovery.m_bCanGetNotifications = SDL_FALSE;
     SDL_HIDAPI_discovery.m_unLastDetect = 0;
+    SDL_HIDAPI_discovery.m_unIgnoreInotifyOpenCount = 0;
 
 #if defined(__WIN32__) || defined(__WINGDK__)
     SDL_HIDAPI_discovery.m_nThreadID = SDL_ThreadID();
@@ -345,8 +349,14 @@ static void HIDAPI_InitializeDiscovery()
          * permissions that we can't read. When udev chmods it to
          * something that we maybe *can* read, we'll get an
          * IN_ATTRIB event to tell us. */
-        if (inotify_add_watch(inotify_fd, "/dev",
-                              IN_CREATE | IN_DELETE | IN_MOVE | IN_ATTRIB) < 0) {
+#if __WEBOS__
+#define INOTIFY_WATCH_LOCATION "/dev/input"
+#define INOTIFY_WATCH_MASK (IN_CREATE | IN_DELETE | IN_MOVE | IN_ATTRIB | IN_OPEN)
+#else
+#define INOTIFY_WATCH_LOCATION "/dev"
+#define INOTIFY_WATCH_MASK (IN_CREATE | IN_DELETE | IN_MOVE | IN_ATTRIB)
+#endif
+        if (inotify_add_watch(inotify_fd, INOTIFY_WATCH_LOCATION, INOTIFY_WATCH_MASK) < 0) {
             close(inotify_fd);
             inotify_fd = -1;
             SDL_LogWarn(SDL_LOG_CATEGORY_INPUT,
@@ -456,9 +466,19 @@ static void HIDAPI_UpdateDiscovery()
 
             while (remain > 0) {
                 if (buf.event.len > 0) {
-                    if (StrHasPrefix(buf.event.name, "hidraw") &&
-                        StrIsInteger(buf.event.name + SDL_strlen("hidraw"))) {
-                        ++SDL_HIDAPI_discovery.m_unDeviceChangeCounter;
+#if __WEBOS__
+#define INOTIFY_WATCH_PREFIX "event"
+#else
+#define INOTIFY_WATCH_PREFIX "hidraw"
+#endif
+                    if (StrHasPrefix(buf.event.name, INOTIFY_WATCH_PREFIX) &&
+                        StrIsInteger(buf.event.name + SDL_strlen(INOTIFY_WATCH_PREFIX))) {
+                        if (buf.event.mask & IN_OPEN && SDL_HIDAPI_discovery.m_unIgnoreInotifyOpenCount == 0) {
+                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "HIDAPI: inotify opened: %s", buf.event.name);
+                            ++SDL_HIDAPI_discovery.m_unDeviceChangeCounter;
+                        } else {
+                            ++SDL_HIDAPI_discovery.m_unDeviceChangeCounter;
+                        }
                         /* We found an hidraw change. We still continue to
                          * drain the inotify fd to avoid leaving old
                          * notifications in the queue. */
@@ -523,7 +543,6 @@ static void HIDAPI_ShutdownDiscovery()
         }
 #endif
     }
-
     SDL_HIDAPI_discovery.m_bInitialized = SDL_FALSE;
 }
 
@@ -578,7 +597,11 @@ static const SDL_UDEV_Symbols *udev_ctx = NULL;
 #define udev_list_entry_get_next                      udev_ctx->udev_list_entry_get_next
 #define udev_enumerate_unref                          udev_ctx->udev_enumerate_unref
 
+#if __WEBOS__
+#include "webos/hid.c"
+#else
 #include "linux/hid.c"
+#endif /* __WEBOS__ */
 #define HAVE_PLATFORM_BACKEND 1
 #endif /* SDL_USE_LIBUDEV */
 
@@ -1641,5 +1664,17 @@ void SDL_EnableGameCubeAdaptors(void)
 #endif /* HAVE_LIBUSB */
 }
 #endif /* HAVE_ENABLE_GAMECUBE_ADAPTORS */
+
+
+#ifdef __WEBOS__
+void SDL_IgnoreInotifyOpen(SDL_bool ignore)
+{
+    if (ignore) {
+        SDL_HIDAPI_discovery.m_unIgnoreInotifyOpenCount += 1;
+    } else {
+        SDL_HIDAPI_discovery.m_unIgnoreInotifyOpenCount -= 1;
+    }
+}
+#endif
 
 /* vi: set sts=4 ts=4 sw=4 expandtab: */

@@ -562,7 +562,7 @@ const char *SDL_GetPlatform(void)
     return "HP-UX";
 #elif __IRIX__
     return "Irix";
-#elif __LINUX__
+#elif __LINUX__ && !__WEBOS__
     return "Linux";
 #elif __MINT__
     return "Atari MiNT";
@@ -610,6 +610,8 @@ const char *SDL_GetPlatform(void)
     return "Nokia N-Gage";
 #elif __3DS__
     return "Nintendo 3DS";
+#elif __WEBOS__
+    return "webOS";
 #else
     return "Unknown (see SDL_platform.h)";
 #endif

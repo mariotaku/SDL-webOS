@@ -30,6 +30,10 @@
 extern void SDL_EnableGameCubeAdaptors(void);
 #endif
 
+#ifdef __WEBOS__
+extern void SDL_IgnoreInotifyOpen(SDL_bool ignore);
+#endif
+
 #endif /* SDL_JOYSTICK_HIDAPI */
 
 /* vi: set sts=4 ts=4 sw=4 expandtab: */

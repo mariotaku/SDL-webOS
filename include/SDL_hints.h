@@ -2442,6 +2442,25 @@ extern "C" {
  */
 #define SDL_HINT_TRACKPAD_IS_TOUCH_ONLY "SDL_TRACKPAD_IS_TOUCH_ONLY"
 
+/**
+ * \brief  A variable that decides whether to let the app handle back key.
+ *
+ * By default, launcher strip will be opened when back key is pressed.
+ * Setting this hint to "true" will cause key event with scancode "SDL_WEBOS_SCANCODE_BACK" to be fired.
+ */
+#define SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_BACK "SDL_WEBOS_ACCESS_POLICY_KEYS_BACK"
+/**
+ * \brief  A variable that decides whether to let the app handle exit key (long-pressing back for magic remotes).
+ */
+#define SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_EXIT "SDL_WEBOS_ACCESS_POLICY_KEYS_EXIT"
+/**
+ * \brief A variable that decides how long till the cursor is hidden in milliseconds.
+ */
+#define SDL_HINT_WEBOS_CURSOR_SLEEP_TIME "SDL_WEBOS_CURSOR_SLEEP_TIME"
+/**
+ * \brief A variable that decides whether to send Luna calls to register the app automatically.
+ */
+#define SDL_HINT_WEBOS_REGISTER_APP "SDL_HINT_WEBOS_REGISTER_APP"
 
 /**
  *  \brief  An enumeration of hint priorities

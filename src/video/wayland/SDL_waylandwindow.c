@@ -31,6 +31,7 @@
 #include "SDL_waylandwindow.h"
 #include "SDL_waylandvideo.h"
 #include "SDL_waylandtouch.h"
+#include "SDL_waylandwebos.h"
 #include "SDL_hints.h"
 #include "../../SDL_hints_c.h"
 #include "SDL_events.h"
@@ -41,6 +42,7 @@
 #include "xdg-activation-v1-client-protocol.h"
 #include "viewporter-client-protocol.h"
 #include "fractional-scale-v1-client-protocol.h"
+#include "webos-shell-client-protocol.h"
 
 #ifdef HAVE_LIBDECOR_H
 #include <libdecor.h>
@@ -251,7 +253,9 @@ static void ConfigureWindowGeometry(SDL_Window *window)
             GetFullScreenDimensions(window, &fs_width, &fs_height, NULL, NULL);
 
             /* Set the buffer scale to 1 since a viewport will be used. */
-            wl_surface_set_buffer_scale(data->surface, 1);
+            if (wl_compositor_get_version(viddata->compositor) >= 3) {
+                wl_surface_set_buffer_scale(data->surface, 1);
+            }
             SetDrawSurfaceViewport(window, data->drawable_width, data->drawable_height,
                                    output_width, output_height);
 
@@ -266,9 +270,11 @@ static void ConfigureWindowGeometry(SDL_Window *window)
 
         if (window_size_changed || drawable_size_changed) {
             if (NeedViewport(window)) {
-                wl_surface_set_buffer_scale(data->surface, 1);
+                if (wl_compositor_get_version(viddata->compositor) >= 3) {
+                    wl_surface_set_buffer_scale(data->surface, 1);
+                }
                 SetDrawSurfaceViewport(window, data->drawable_width, data->drawable_height, window->w, window->h);
-            } else {
+            } else if (wl_compositor_get_version(viddata->compositor) >= 3) {
                 UnsetDrawSurfaceViewport(window);
 
                 if (!FullscreenModeEmulation(window)) {
@@ -277,6 +283,8 @@ static void ConfigureWindowGeometry(SDL_Window *window)
                 } else {
                     wl_surface_set_buffer_scale(data->surface, 1);
                 }
+            } else {
+                UnsetDrawSurfaceViewport(window);
             }
 
             /* Clamp the physical window size to the system minimum required size. */
@@ -1986,6 +1994,9 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
 {
     SDL_WindowData *data;
     SDL_VideoData *c;
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    const char *appId;
+#endif
 
     data = SDL_calloc(1, sizeof(*data));
     if (data == NULL) {
@@ -2030,6 +2041,10 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
 
     data->surface =
         wl_compositor_create_surface(c->compositor);
+    if (data->surface == NULL) {
+        return SDL_SetError("Could not create surface");
+    }
+
     wl_surface_add_listener(data->surface, &surface_listener, data);
 
     SDL_WAYLAND_register_surface(data->surface);
@@ -2063,6 +2078,26 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
         QtExtendedSurface_Subscribe(data->extended_surface, SDL_HINT_QTWAYLAND_WINDOW_FLAGS);
     }
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH */
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (c->shell.wl) {
+        data->shell_surface.wl = wl_shell_get_shell_surface(c->shell.wl, data->surface);
+        if (data->shell_surface.wl == NULL) {
+            return SDL_SetError("Can't create shell surface");
+        }
+        wl_shell_surface_set_toplevel(data->shell_surface.wl);
+    }
+    if (c->shell.webos) {
+        data->shell_surface.webos = wl_webos_shell_get_shell_surface(c->shell.webos, data->surface);
+        if (data->shell_surface.webos == NULL) {
+            return SDL_SetError("Can't create webos shell surface");
+        }
+        appId = SDL_getenv("APPID");
+        if (appId == NULL) {
+            return SDL_SetError("APPID environment variable is not set");
+        }
+        wl_webos_shell_surface_set_property(data->shell_surface.webos, "appId", appId);
+    }
+#endif
 
     if (window->flags & SDL_WINDOW_OPENGL) {
         data->egl_window = WAYLAND_wl_egl_window_create(data->surface, data->drawable_width, data->drawable_height);

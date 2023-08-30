@@ -510,7 +510,9 @@ static int Wayland_ShowCursor(SDL_Cursor *cursor)
             }
         }
 
-        wl_surface_set_buffer_scale(data->surface, scale);
+        if (wl_compositor_get_version(d->compositor) >= 3) {
+            wl_surface_set_buffer_scale(data->surface, scale);
+        }
         wl_pointer_set_cursor(pointer,
                               input->pointer_enter_serial,
                               data->surface,

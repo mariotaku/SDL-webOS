@@ -1,7 +1,6 @@
 /*
   Simple DirectMedia Layer
   Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
-  Copyright (C) 2022 Collabora Ltd.
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -19,36 +18,12 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
+
+/* Contributed by Thomas Perl <thomas.perl@jollamobile.com> */
+
 #include "../../SDL_internal.h"
 
-#include "SDL_sandbox.h"
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+#include "SDL_waylandwebos.h"
 
-#include <unistd.h>
-
-SDL_Sandbox SDL_DetectSandbox(void)
-{
-#if __WEBOS__
-    if (access("/var/palm/jail", F_OK) == 0) {
-        return SDL_SANDBOX_NONE;
-    }
-    return SDL_SANDBOX_UNKNOWN_CONTAINER;
-#else
-    if (access("/.flatpak-info", F_OK) == 0) {
-        return SDL_SANDBOX_FLATPAK;
-    }
-
-    /* For Snap, we check multiple variables because they might be set for
-     * unrelated reasons. This is the same thing WebKitGTK does. */
-    if (SDL_getenv("SNAP") != NULL && SDL_getenv("SNAP_NAME") != NULL && SDL_getenv("SNAP_REVISION") != NULL) {
-        return SDL_SANDBOX_SNAP;
-    }
-
-    if (access("/run/host/container-manager", F_OK) == 0) {
-        return SDL_SANDBOX_UNKNOWN_CONTAINER;
-    }
-
-    return SDL_SANDBOX_NONE;
-#endif
-}
-
-/* vi: set ts=4 sw=4 expandtab: */
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */

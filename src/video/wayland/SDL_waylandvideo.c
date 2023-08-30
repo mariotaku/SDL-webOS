@@ -35,6 +35,7 @@
 #include "SDL_waylandmouse.h"
 #include "SDL_waylandkeyboard.h"
 #include "SDL_waylandtouch.h"
+#include "SDL_waylandwebos.h"
 #include "SDL_waylandclipboard.h"
 #include "SDL_waylandvulkan.h"
 #include "SDL_hints.h"
@@ -57,6 +58,7 @@
 #include "viewporter-client-protocol.h"
 #include "primary-selection-unstable-v1-client-protocol.h"
 #include "fractional-scale-v1-client-protocol.h"
+#include "webos-shell-client-protocol.h"
 
 #ifdef HAVE_LIBDECOR_H
 #include <libdecor.h>
@@ -129,6 +131,8 @@ static char *get_classname()
     return SDL_strdup("SDL_App");
 }
 
+#if SDL_WAYLAND_CHECK_VERSION(1, 17, 90)
+
 static const char *SDL_WAYLAND_surface_tag = "sdl-window";
 static const char *SDL_WAYLAND_output_tag = "sdl-output";
 
@@ -151,6 +155,30 @@ SDL_bool SDL_WAYLAND_own_output(struct wl_output *output)
 {
     return wl_proxy_get_tag((struct wl_proxy *)output) == &SDL_WAYLAND_output_tag;
 }
+#else
+
+void SDL_WAYLAND_register_surface(struct wl_surface *surface)
+{
+    (void) surface;
+}
+
+void SDL_WAYLAND_register_output(struct wl_output *output)
+{
+    (void) output;
+}
+
+SDL_bool SDL_WAYLAND_own_surface(struct wl_surface *surface)
+{
+    (void) surface;
+    return SDL_TRUE;
+}
+
+SDL_bool SDL_WAYLAND_own_output(struct wl_output *output)
+{
+    (void) output;
+    return SDL_TRUE;
+}
+#endif
 
 static void Wayland_DeleteDevice(SDL_VideoDevice *device)
 {
@@ -814,6 +842,8 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
         d->compositor = wl_registry_bind(d->registry, id, &wl_compositor_interface, SDL_min(4, version));
     } else if (SDL_strcmp(interface, "wl_output") == 0) {
         Wayland_add_display(d, id);
+    } else if (SDL_strcmp(interface, "wl_shell") == 0) {
+        d->shell.wl = wl_registry_bind(d->registry, id, &wl_shell_interface, 1);
     } else if (SDL_strcmp(interface, "wl_seat") == 0) {
         Wayland_display_add_input(d, id, version);
     } else if (SDL_strcmp(interface, "xdg_wm_base") == 0) {
@@ -863,6 +893,10 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
                                             &qt_windowmanager_interface, 1);
         qt_windowmanager_add_listener(d->windowmanager, &windowmanager_listener, d);
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH */
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    } else if (SDL_strcmp(interface, "wl_webos_shell") == 0) {
+        d->shell.webos = wl_registry_bind(registry, id, &wl_webos_shell_interface, 1);
+#endif
     }
 }
 

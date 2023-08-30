@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="webos_input_manager">
+
+  <copyright>
+    Copyright (c) 2014-2020 LG Electronics, Inc.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+    SPDX-License-Identifier: Apache-2.0
+  </copyright>
+
+  <interface name="wl_webos_input_manager" version="1">
+    <description summary="get additional input interface">
+      wl_webos_seat has more information than wl_seat. User can get it using
+      get_webos_seat(seat).
+    </description>
+
+    <request name="get_webos_seat">
+      <description summary="get webos seat">
+        Returns a webos_seat associated with the seat.
+      </description>
+      <arg name="id" type="new_id" interface="wl_webos_seat"/>
+      <arg name="seat" type="object" interface="wl_seat"/>
+    </request>
+
+    <event name="cursor_visibility">
+      <description summary="current cursor visibility">
+        If the current cursor visibility is chagned, notify it.
+      </description>
+      <arg name="visibility" type="uint" summary="boolean vaule for visibility of current cursor"/>
+      <arg name="webos_seat" type="object" interface="wl_webos_seat" allow-null="true" summary="webos_seat cursor visibility changed, if this value is Null All cursors are hidden"/>
+    </event>
+
+    <request name="set_cursor_visibility">
+      <description summary="set cursor visibility">
+        Sets the cursor visibility.
+      </description>
+      <arg name="visibility" type="uint" summary="boolean for the cursor visibility"/>
+    </request>
+
+  </interface>
+
+  <interface name="wl_webos_seat" version="1">
+    <description summary="interface for additional input data">
+      This is a webOS extension for additional input data such as gyroscope or
+      accelerometer. If the seat has additional input data, user can request it
+      using get_*.
+    </description>
+
+    <enum name="capability">
+      <description summary="webos seat capability bitmask">
+        This is a bitmask of capabilities this webOS seat has; if a member is
+        set, then it is present on the seat.
+      </description>
+      <entry name="default" value="0" summary="this seat does not provide additional input"/>
+      <entry name="gyroscope" value="1" summary="this seat can provide gyroscope data, wl_webos_gyroscope"/>
+      <entry name="accelerometer" value="2" summary="this seat can provide accelerometer data, wl_webos_accelerometer"/>
+    </enum>
+
+    <event name="info">
+      <description summary="info about the seat">
+        This event will be sent immediately after the client as requested the
+        webOS seat from wl_webos_input_manager.
+
+        The designator [0, 1, ... N] indicates if this is the primary(=0),
+        secondary, etc seat.
+      </description>
+      <arg name="id" type="uint" summary="an unique identifier for the seat"/>
+      <arg name="name" type="string" summary="a human readable name for the seat"/>
+      <arg name="designator" type="uint" summary="a value for the designation of this seat"/>
+      <arg name="capabilities" type="uint"/>
+    </event>
+
+    <request name="get_gyroscope">
+      <description summary="get interface for gyroscope">
+        If the seat has gyroscope sensor, user can get this interface.
+      </description>
+      <arg name="id" type="new_id" interface="wl_webos_gyroscope"/>
+    </request>
+
+    <request name="get_accelerometer">
+      <description summary="get interface for accelerometer">
+        If the seat has accelerometer sensor, user can get this interface.
+      </description>
+      <arg name="id" type="new_id" interface="wl_webos_accelerometer"/>
+    </request>
+
+  </interface>
+
+  <interface name="wl_webos_gyroscope" version="1">
+    <description summary="interface for gyroscope device">
+      This is an interface for gyroscope device.
+    </description>
+
+    <event name="sensor_data">
+      <description summary="sensor data from the seat">
+        The gyroscope sensor data will be delivered only if the client
+        explicitly requested it via "requeest_data".
+      </description>
+      <arg name="x" type="fixed" summary="data for x-axis"/>
+      <arg name="y" type="fixed" summary="data for y-axis"/>
+      <arg name="z" type="fixed" summary="data for z-axis"/>
+    </event>
+
+    <request name="request_data">
+      <description summary="request sensor data">
+        Requests to enable/disable sending data for gyroscope device.
+      </description>
+      <arg name="enabled" type="uint" summary="boolean to indicate if sensor data is needed"/>
+    </request>
+
+  </interface>
+
+  <interface name="wl_webos_accelerometer" version="1">
+    <description summary="interface for accelerometer device">
+      This is an interface for accelerometer device.
+    </description>
+
+    <event name="sensor_data">
+      <description summary="sensor data from the seat">
+        The accelerometer sensor data will be delivered only if the client
+        explicitly requested it via "request_data".
+      </description>
+      <arg name="x" type="fixed" summary="data for x-axis"/>
+      <arg name="y" type="fixed" summary="data for y-axis"/>
+      <arg name="z" type="fixed" summary="data for z-axis"/>
+    </event>
+
+    <request name="request_data">
+      <description summary="request sensor data">
+        Requests to enable/disable sending data for accelerometer device.
+      </description>
+      <arg name="enabled" type="uint" summary="boolean to indicate if sensor data is needed"/>
+    </request>
+
+  </interface>
+
+</protocol>

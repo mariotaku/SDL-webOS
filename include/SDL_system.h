@@ -42,7 +42,7 @@ extern "C" {
 
 /* Platform specific functions for Windows */
 #if defined(__WIN32__) || defined(__GDK__)
-	
+
 typedef void (SDLCALL * SDL_WindowsMessageHook)(void *userdata, void *hWnd, unsigned int message, Uint64 wParam, Sint64 lParam);
 
 /**
@@ -182,9 +182,9 @@ extern DECLSPEC int SDLCALL SDL_LinuxSetThreadPriority(Sint64 threadID, int prio
  * \since This function is available since SDL 2.0.18.
  */
 extern DECLSPEC int SDLCALL SDL_LinuxSetThreadPriorityAndPolicy(Sint64 threadID, int sdlPriority, int schedPolicy);
- 
+
 #endif /* __LINUX__ */
-	
+
 /* Platform specific functions for iOS */
 #ifdef __IPHONEOS__
 
@@ -611,6 +611,33 @@ typedef struct XTaskQueueObject * XTaskQueueHandle;
 extern DECLSPEC int SDLCALL SDL_GDKGetTaskQueue(XTaskQueueHandle * outTaskQueue);
 
 #endif
+
+#ifdef __WEBOS__
+
+typedef enum {
+    SDL_WEBOS_EXPORED_WINDOW_TYPE_VIDEO = 0,
+    SDL_WEBOS_EXPORED_WINDOW_TYPE_SUBTITLE = 1,
+    SDL_WEBOS_EXPORED_WINDOW_TYPE_TRANSPARENT = 2,
+    SDL_WEBOS_EXPORED_WINDOW_TYPE_OPAQUE = 3
+} SDL_webOSExportedWindowType;
+
+extern DECLSPEC SDL_bool SDLCALL SDL_webOSCursorVisibility(SDL_bool visible);
+
+extern DECLSPEC SDL_bool SDLCALL SDL_webOSGetPanelResolution(int *width, int *height);
+
+extern DECLSPEC SDL_bool SDLCALL SDL_webOSGetRefreshRate(int *rate);
+
+extern DECLSPEC const char *SDLCALL SDL_webOSCreateExportedWindow(SDL_webOSExportedWindowType type);
+
+extern DECLSPEC SDL_bool SDLCALL SDL_webOSSetExportedWindow(const char *windowId, SDL_Rect *src, SDL_Rect *dst);
+
+extern DECLSPEC SDL_bool SDLCALL SDL_webOSExportedSetCropRegion(const char *windowId, SDL_Rect *org, SDL_Rect *src, SDL_Rect *dst);
+
+extern DECLSPEC SDL_bool SDLCALL SDL_webOSExportedSetProperty(const char *windowId, const char *name, const char *value);
+
+extern DECLSPEC void SDLCALL SDL_webOSDestroyExportedWindow(const char *windowId);
+
+#endif /* __WEBOS__ */
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

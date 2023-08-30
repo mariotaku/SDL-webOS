@@ -78,8 +78,11 @@ SDL_WAYLAND_SYM(int, wl_list_empty, (const struct wl_list *))
 SDL_WAYLAND_SYM(void, wl_list_insert_list, (struct wl_list *, struct wl_list *))
 SDL_WAYLAND_SYM(struct wl_proxy *, wl_proxy_marshal_constructor, (struct wl_proxy *, uint32_t opcode, const struct wl_interface *interface, ...))
 SDL_WAYLAND_SYM(struct wl_proxy *, wl_proxy_marshal_constructor_versioned, (struct wl_proxy *proxy, uint32_t opcode, const struct wl_interface *interface, uint32_t version, ...))
+
+#if SDL_WAYLAND_CHECK_VERSION(1, 15, 0)
 SDL_WAYLAND_SYM(void, wl_proxy_set_tag, (struct wl_proxy *, const char * const *))
 SDL_WAYLAND_SYM(const char * const *, wl_proxy_get_tag, (struct wl_proxy *))
+#endif
 
 #if SDL_WAYLAND_CHECK_VERSION(1, 20, 0)
 /* wayland-scanner 1.20 generates code that will call these, so these are

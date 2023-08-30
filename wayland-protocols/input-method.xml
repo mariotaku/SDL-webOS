@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="input_method">
+  <copyright>
+    Copyright © 2012 Intel Corporation
+    Copyright © 2013-2020 LG Electronics, Inc.
+
+    Permission to use, copy, modify, distribute, and sell this
+    software and its documentation for any purpose is hereby granted
+    without fee, provided that the above copyright notice appear in
+    all copies and that both that copyright notice and this permission
+    notice appear in supporting documentation, and that the name of
+    the copyright holders not be used in advertising or publicity
+    pertaining to distribution of the software without specific,
+    written prior permission.  The copyright holders make no
+    representations about the suitability of this software for any
+    purpose.  It is provided "as is" without express or implied
+    warranty.
+
+    THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+    SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
+    AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+    ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+  </copyright>
+
+  <interface name="input_method_context" version="1">
+    <description summary="input method context">
+      Corresponds to a text model on input method side. An input method context
+      is created on text mode activation on the input method side. It allows to
+      receive information about the text model from the application via events.
+      Input method contexts do not keep state after deactivation and should be
+      destroyed after deactivation is handled.
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy object">
+        Destroys the input method context object.
+      </description>
+    </request>
+
+    <request name="commit_string">
+      <description summary="commit string">
+        Sends the commit string text to the applications text model.
+      </description>
+      <arg name="serial" type="uint"/>
+      <arg name="text" type="string"/>
+    </request>
+
+    <request name="preedit_string">
+      <description summary="pre-edit string">
+        Sends the pre-edit string text to the applications text model.
+      </description>
+      <arg name="serial" type="uint"/>
+      <arg name="text" type="string"/>
+      <arg name="commit" type="string"/>
+    </request>
+
+    <request name="preedit_styling">
+      <description summary="pre-edit styling">
+        Sets styling information on composing text. The style is applied for
+        length (in bytes) characters from index relative to the beginning of
+        the composing text (as byte index). Multiple styles can be applied
+        to a composing text.
+      </description>
+      <arg name="serial" type="uint"/>
+      <arg name="index" type="uint"/>
+      <arg name="length" type="uint"/>
+      <arg name="style" type="uint"/>
+    </request>
+
+    <request name="preedit_cursor">
+      <description summary="pre-edit cursor">
+        Sets the cursor position inside the composing text (as byte index)
+        relative to the start of the composing text.
+      </description>
+      <arg name="serial" type="uint"/>
+      <arg name="index" type="int"/>
+    </request>
+
+    <request name="delete_surrounding_text">
+      <description summary="delete surrounding text">
+        Deletes the surrounding text.
+      </description>
+      <arg name="serial" type="uint"/>
+      <arg name="index" type="int"/>
+      <arg name="length" type="uint"/>
+    </request>
+
+    <request name="cursor_position">
+      <description summary="set cursor to new position">
+        Sets the cursor or anchor position.
+
+        Not implemented.
+      </description>
+      <arg name="serial" type="uint"/>
+      <arg name="index" type="int"/>
+      <arg name="anchor" type="int"/>
+    </request>
+
+    <request name="modifiers_map">
+      <description summary="modifiers map">
+        Transfers an array of 0-terminated modifiers names. The position in
+        the array is the index of the modifier as used in the modifiers
+        bitmask in the keysym event.
+      </description>
+      <arg name="map" type="array"/>
+    </request>
+
+    <request name="keysym">
+      <description summary="keysym">
+        Notifies when a key event was sent. Key events should not be used
+        for normal text input operations, which should be done with
+        commit_string, delete_surrounfing_text, etc. The key event follows
+        the wl_keyboard key event convention. State is a XKB keysym, state a
+        wl_keyboard key_state.
+      </description>
+      <arg name="serial" type="uint"/>
+      <arg name="time" type="uint"/>
+      <arg name="sym" type="uint"/>
+      <arg name="state" type="uint"/>
+      <arg name="modifiers" type="uint"/>
+    </request>
+
+    <request name="grab_keyboard">
+      <description summary="grab hardware keyboard">
+        Allows an input method to receive hardware keyboard input and process
+        key events to generate text events (with pre-edit) over the wire. This
+        allows input methods which compose multiple key events for inputting
+        text like it is done for CJK languages.
+      </description>
+      <arg name="keyboard" type="new_id" interface="wl_keyboard"/>
+    </request>
+
+    <request name="key">
+      <description summary="forward key event">
+        Forwards a wl_keyboard::key event to the client that was not processed
+        by the input method itself. Should be used when filtering key events
+        with grab_keyboard. The arguments should be the ones from the
+        wl_keyboard::key event.
+      </description>
+      <arg name="serial" type="uint"/>
+      <arg name="time" type="uint"/>
+      <arg name="key" type="uint"/>
+      <arg name="state" type="uint"/>
+    </request>
+
+    <request name="modifiers">
+      <description summary="forward modifiers event">
+        Forwards a wl_keyboard::modifiers event to the client that was not
+        processed by the input method itself.  Should be used when filtering
+        key events with grab_keyboard. The arguments should be the ones
+        from the wl_keyboard::modifiers event.
+      </description>
+      <arg name="serial" type="uint"/>
+      <arg name="mods_depressed" type="uint"/>
+      <arg name="mods_latched" type="uint"/>
+      <arg name="mods_locked" type="uint"/>
+      <arg name="group" type="uint"/>
+    </request>
+
+    <event name="surrounding_text">
+      <description summary="surrounding text event">
+        The plain surrounding text around the input position. Cursor is the
+        position within the surrounding text. Anchor is the position of the
+        selection anchor within the surrounding text. If there is no selected
+        text anchor is the same as cursor.
+      </description>
+      <arg name="text" type="string"/>
+      <arg name="cursor" type="uint"/>
+      <arg name="anchor" type="uint"/>
+    </event>
+
+    <event name="reset">
+      <description summary="reset">
+        Resets the input state.
+      </description>
+      <arg name="serial" type="uint"/>
+    </event>
+
+    <event name="content_type">
+      <description summary="set content purpose and hint">
+        Sets the content purpose and content hint.
+      </description>
+      <arg name="hint" type="uint"/>
+      <arg name="purpose" type="uint"/>
+    </event>
+
+    <event name="invoke_action">
+      <description summary="invoke action">
+        Invokes a button action on a given position.
+
+        Not implemented.
+      </description>
+      <arg name="button" type="uint"/>
+      <arg name="index" type="uint"/>
+    </event>
+
+    <event name="commit">
+      <description summary="commit state">
+        Requests to apply state changes sent so far.
+      </description>
+    </event>
+
+    <event name="max_text_length">
+      <description summary="set max length of input field">
+        Notifies the maximum length of an input field.
+      </description>
+      <arg name="length" type="uint"/>
+    </event>
+
+    <event name="platform_data">
+      <description summary="set platform specific data">
+        Notifies the platform specific data (text).
+      </description>
+      <arg name="text" type="string"/>
+    </event>
+
+    <event name="enter_key_type">
+      <description summary="set type of enter key">
+        Sets the type of the enter key on an input panel (virtual keyboard).
+      </description>
+      <arg name="enter_key_type" type="uint"/>
+    </event>
+
+  </interface>
+
+  <interface name="input_method" version="2">
+    <description summary="input method">
+      An input method object is responsible to compose text in response to
+      input from hardware or virtual keyboards. There is one input method
+      object per seat. On activate there is a new input method context object
+      created which allows the input method to communicate with the text model.
+    </description>
+
+    <event name="activate">
+      <description summary="activate event">
+        A text model was activated. Creates an input method context object
+        which allows communication with the text model.
+      </description>
+      <arg name="id" type="new_id" interface="input_method_context"/>
+      <arg name="serial" type="uint"/>
+    </event>
+
+    <event name="deactivate">
+      <description summary="activate event">
+        The text model corresponding to the context argument was deactivated.
+        The input method context should be destroyed after deactivation is
+        handled.
+      </description>
+      <arg name="context" type="object" interface="input_method_context"/>
+    </event>
+
+    <event name="show_input_panel">
+      <description summary="show input panel event">
+        The text model corresponding that the input panel sets showing
+      </description>
+      <arg name="context" type="object" interface="input_method_context"/>
+    </event>
+
+    <event name="hide_input_panel">
+      <description summary="hide input panel event">
+        The text model corresponding that the input panel sets hiding
+      </description>
+      <arg name="context" type="object" interface="input_method_context"/>
+    </event>
+
+    <request name="set_display_id" since="2">
+      <description summary="set display id">
+        Sets the id of the display corresponding.
+      </description>
+      <arg name="id" type="uint" summary="display id"/>
+    </request>
+
+  </interface>
+
+  <interface name="input_panel" version="1">
+    <description summary="interface for implementing keyboards">
+      Only one client can bind this interface at a time.
+    </description>
+
+    <request name="get_input_panel_surface">
+      <description summary="get input panel surface">
+        Returns the surface of the corresponding input panel.
+      </description>
+      <arg name="id" type="new_id" interface="input_panel_surface"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </request>
+
+  </interface>
+
+  <interface name="input_panel_surface" version="1">
+    <enum name="position">
+      <description summary="position of input panel">
+        Position of an input panel.
+      </description>
+      <entry name="center_bottom" value="0"/>
+    </enum>
+
+    <request name="set_toplevel">
+      <description summary="set the surface type as a keyboard">
+        An input panel surface is only shown, when a text model is active.
+
+        Not implemented.
+      </description>
+      <arg name="position" type="uint"/>
+    </request>
+
+  </interface>
+
+</protocol>
