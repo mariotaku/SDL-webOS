@@ -35,9 +35,10 @@
 #include "SDL_waylandmouse.h"
 #include "SDL_waylandkeyboard.h"
 #include "SDL_waylandtouch.h"
-#include "SDL_waylandwebos.h"
 #include "SDL_waylandclipboard.h"
 #include "SDL_waylandvulkan.h"
+#include "SDL_waylandwebos.h"
+#include "SDL_waylandwebos_foreign.h"
 #include "SDL_hints.h"
 
 #include <sys/types.h>
@@ -159,23 +160,23 @@ SDL_bool SDL_WAYLAND_own_output(struct wl_output *output)
 
 void SDL_WAYLAND_register_surface(struct wl_surface *surface)
 {
-    (void) surface;
+    (void)surface;
 }
 
 void SDL_WAYLAND_register_output(struct wl_output *output)
 {
-    (void) output;
+    (void)output;
 }
 
 SDL_bool SDL_WAYLAND_own_surface(struct wl_surface *surface)
 {
-    (void) surface;
+    (void)surface;
     return SDL_TRUE;
 }
 
 SDL_bool SDL_WAYLAND_own_output(struct wl_output *output)
 {
-    (void) output;
+    (void)output;
     return SDL_TRUE;
 }
 #endif
@@ -298,6 +299,14 @@ static SDL_VideoDevice *Wayland_CreateDevice(void)
     device->Vulkan_UnloadLibrary = Wayland_Vulkan_UnloadLibrary;
     device->Vulkan_GetInstanceExtensions = Wayland_Vulkan_GetInstanceExtensions;
     device->Vulkan_CreateSurface = Wayland_Vulkan_CreateSurface;
+#endif
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    device->WebOSCreateExportedWindow = WaylandWebOS_CreateExportedWindow;
+    device->WebOSSetExportedWindow = WaylandWebOS_SetExportedWindow;
+    device->WebOSExportedSetCropRegion = WaylandWebOS_ExportedSetCropRegion;
+    device->WebOSExportedSetProperty = WaylandWebOS_ExportedSetProperty;
+    device->WebOSDestroyExportedWindow = WaylandWebOS_DestroyExportedWindow;
 #endif
 
     device->free = Wayland_DeleteDevice;
@@ -896,6 +905,9 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
     } else if (SDL_strcmp(interface, "wl_webos_shell") == 0) {
         d->shell.webos = wl_registry_bind(registry, id, &wl_webos_shell_interface, 1);
+    } else if (SDL_strcmp(interface, "wl_webos_foreign") == 0) {
+        d->webos_foreign = wl_registry_bind(registry, id, &wl_webos_foreign_interface, 1);
+        d->webos_foreign_table = SDL_calloc(1, sizeof(*d->webos_foreign_table));
 #endif
     }
 }
@@ -978,6 +990,8 @@ int Wayland_VideoInit(_THIS)
     // Second roundtrip to receive all output events.
     WAYLAND_wl_display_roundtrip(data->display);
 
+    _this->webos_foreign_lock = SDL_CreateMutex();
+
     Wayland_InitMouse();
 
     /* Get the surface class name, usually the name of the application */
@@ -1027,6 +1041,8 @@ static void Wayland_VideoCleanup(_THIS)
 
     Wayland_QuitWin(data);
     Wayland_FiniMouse(data);
+
+    WaylandWebOS_CleanUpForeign(_this);
 
     for (i = _this->num_displays - 1; i >= 0; --i) {
         SDL_VideoDisplay *display = &_this->displays[i];

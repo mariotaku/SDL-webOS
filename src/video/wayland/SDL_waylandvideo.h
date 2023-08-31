@@ -97,6 +97,13 @@ typedef struct
     struct qt_surface_extension *surface_extension;
     struct qt_windowmanager *windowmanager;
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH */
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    struct wl_webos_foreign *webos_foreign;
+    struct {
+        int count;
+        struct webos_foreign_window *windows;
+    } *webos_foreign_table;
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
     char *classname;
 

@@ -18,19 +18,20 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
-
-#ifndef SDL_waylandwebos_h_
-#define SDL_waylandwebos_h_
-
 #include "../../SDL_internal.h"
 
-#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+#ifndef SDL_webos_libs_h_
+#define SDL_webos_libs_h_
 
-#include "SDL_system.h"
-#include "SDL_waylandwindow.h"
+extern int SDL_webOSLoadLibraries();
 
-extern int WaylandWebOS_SetupSurface(SDL_WindowData *data);
+extern void SDL_webOSUnloadLibraries();
 
-#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
+#define SDL_HELPERS_SYM(rc, fn, params)        \
+    typedef rc(*SDL_DYNHELPERSFN_##fn) params; \
+    extern SDL_DYNHELPERSFN_##fn HELPERS_##fn;
+#include "SDL_webos_helpers_sym.h"
 
-#endif /* SDL_waylandwebos_h_ */
+#endif // SDL_webos_libs_h_
+
+/* vi: set ts=4 sw=4 expandtab: */

@@ -51,7 +51,7 @@ const static struct wl_webos_shell_surface_listener webos_shell_surface_listener
     .addon_status_changed = webos_shell_handle_addon_status_changed,
 };
 
-extern int WaylandWebOS_SetupSurface(SDL_WindowData *data)
+int WaylandWebOS_SetupSurface(SDL_WindowData *data)
 {
     const char *appId;
     const char *hintValue;

@@ -19,8 +19,8 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-#ifndef SDL_waylandwebos_h_
-#define SDL_waylandwebos_h_
+#ifndef SDL_waylandwebos_foreign_h_
+#define SDL_waylandwebos_foreign_h_
 
 #include "../../SDL_internal.h"
 
@@ -28,9 +28,27 @@
 
 #include "SDL_system.h"
 #include "SDL_waylandwindow.h"
+#include "webos-foreign-client-protocol.h"
 
-extern int WaylandWebOS_SetupSurface(SDL_WindowData *data);
+typedef struct webos_foreign_window
+{
+    struct wl_webos_exported *exported;
+    char window_id[32];
+    struct webos_foreign_window *next;
+} webos_foreign_window;
+
+extern void WaylandWebOS_CleanUpForeign(_THIS);
+
+extern const char *WaylandWebOS_CreateExportedWindow(_THIS, SDL_webOSExportedWindowType type);
+
+extern SDL_bool WaylandWebOS_SetExportedWindow(_THIS, const char *windowId, SDL_Rect *src, SDL_Rect *dst);
+
+extern SDL_bool WaylandWebOS_ExportedSetCropRegion(_THIS, const char *windowId, SDL_Rect *org, SDL_Rect *src, SDL_Rect *dst);
+
+extern SDL_bool WaylandWebOS_ExportedSetProperty(_THIS, const char *windowId, const char *name, const char *value);
+
+extern void WaylandWebOS_DestroyExportedWindow(_THIS, const char *windowId);
 
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
-#endif /* SDL_waylandwebos_h_ */
+#endif /* SDL_waylandwebos_foreign_h_ */

@@ -614,11 +614,16 @@ extern DECLSPEC int SDLCALL SDL_GDKGetTaskQueue(XTaskQueueHandle * outTaskQueue)
 
 #ifdef __WEBOS__
 
-typedef enum {
-    SDL_WEBOS_EXPORED_WINDOW_TYPE_VIDEO = 0,
-    SDL_WEBOS_EXPORED_WINDOW_TYPE_SUBTITLE = 1,
-    SDL_WEBOS_EXPORED_WINDOW_TYPE_TRANSPARENT = 2,
-    SDL_WEBOS_EXPORED_WINDOW_TYPE_OPAQUE = 3
+typedef enum
+{
+    SDL_WEBOS_EXPORTED_WINDOW_TYPE_VIDEO = 0,
+    SDL_WEBOS_EXPORTED_WINDOW_TYPE_SUBTITLE = 1,
+    SDL_WEBOS_EXPORTED_WINDOW_TYPE_TRANSPARENT = 2,
+    SDL_WEBOS_EXPORTED_WINDOW_TYPE_OPAQUE = 3,
+    SDL_WEBOS_EXPORED_WINDOW_TYPE_VIDEO __attribute__((deprecated("typo"))) = 0,
+    SDL_WEBOS_EXPORED_WINDOW_TYPE_SUBTITLE __attribute__((deprecated("typo"))) = 1,
+    SDL_WEBOS_EXPORED_WINDOW_TYPE_TRANSPARENT __attribute__((deprecated("typo"))) = 2,
+    SDL_WEBOS_EXPORED_WINDOW_TYPE_OPAQUE __attribute__((deprecated("typo"))) = 3
 } SDL_webOSExportedWindowType;
 
 extern DECLSPEC SDL_bool SDLCALL SDL_webOSCursorVisibility(SDL_bool visible);

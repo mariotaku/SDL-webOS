@@ -36,6 +36,8 @@
 
 /* this checks for HAVE_DBUS_DBUS_H internally. */
 #include "core/linux/SDL_dbus.h"
+#include "core/webos/SDL_webos_libs.h"
+#include "core/webos/SDL_webos_init.h"
 
 #if defined(__EMSCRIPTEN__)
 #include <emscripten.h>
@@ -180,6 +182,14 @@ int SDL_InitSubSystem(Uint32 flags)
 
 #if SDL_USE_LIBDBUS
     SDL_DBus_Init();
+#endif
+#if __WEBOS__
+    if (SDL_webOSLoadLibraries() < 0) {
+        return SDL_SetError("Failed to load webOS libraries");
+    }
+    if (!SDL_webOSAppRegistered()) {
+        SDL_webOSRegisterApp();
+    }
 #endif
 
     if (flags & SDL_INIT_GAMECONTROLLER) {
@@ -475,6 +485,9 @@ Uint32 SDL_WasInit(Uint32 flags)
 void SDL_Quit(void)
 {
     SDL_bInMainQuit = SDL_TRUE;
+#if __WEBOS__
+    SDL_webOSAppQuited();
+#endif
 
     /* Quit all subsystems */
 #if SDL_VIDEO_DRIVER_WINDOWS
@@ -491,6 +504,9 @@ void SDL_Quit(void)
 
 #if SDL_USE_LIBDBUS
     SDL_DBus_Quit();
+#endif
+#if __WEBOS__
+    SDL_webOSUnloadLibraries();
 #endif
 
     SDL_LogQuit();

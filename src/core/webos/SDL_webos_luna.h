@@ -18,19 +18,14 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
-
-#ifndef SDL_waylandwebos_h_
-#define SDL_waylandwebos_h_
-
 #include "../../SDL_internal.h"
 
-#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+#ifndef SDL_webos_luna_h_
+#define SDL_webos_luna_h_
+#include "SDL_stdinc.h"
 
-#include "SDL_system.h"
-#include "SDL_waylandwindow.h"
+extern SDL_bool SDL_webOSLunaServiceCallSync(const char* uri, const char* payload, int pub, char **output);
 
-extern int WaylandWebOS_SetupSurface(SDL_WindowData *data);
+#endif // SDL_webos_luna_h_
 
-#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
-
-#endif /* SDL_waylandwebos_h_ */
+/* vi: set ts=4 sw=4 expandtab: */
