@@ -67,7 +67,16 @@ const char *WaylandWebOS_CreateExportedWindow(_THIS, SDL_webOSExportedWindowType
         SDL_SetError("Failed creating exported window: No video driver data for video device");
         return NULL;
     }
-    window = SDL_GL_GetCurrentWindow();
+    if ((window = SDL_GL_GetCurrentWindow()) == NULL) {
+        window = _this->windows;
+        while (window != NULL) {
+            if (window->driverdata != NULL) {
+                break;
+            }
+            window = window->next;
+        }
+    }
+
     if (window == NULL) {
         SDL_SetError("Failed creating exported window: No current window");
         return NULL;
@@ -108,6 +117,7 @@ const char *WaylandWebOS_CreateExportedWindow(_THIS, SDL_webOSExportedWindowType
         SDL_Delay(10);
         WAYLAND_wl_display_dispatch(data->display);
     }
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Created exported window %s", foreign_window->window_id);
     SDL_UnlockMutex(_this->webos_foreign_lock);
     return foreign_window->window_id;
 }
