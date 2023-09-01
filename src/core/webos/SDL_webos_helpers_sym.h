@@ -66,6 +66,7 @@ SDL_HELPERS_SYM(int, HJson_getBool, (HJson *hjson, const char *valueName, int* o
 SDL_HELPERS_SYM(HString*, HJson_getValue, (HJson *hjson, const char *valueName),1)
 SDL_HELPERS_SYM(const char*, HString_toStr, (HString *str),1)
 SDL_HELPERS_SYM(void, HString_free, (HString *str),1)
+SDL_HELPERS_SYM(void, HProcessAppState, (int state),1)
 SDL_HELPERS_SYM(void, HNDLSetLSHandle, (LSHandle *handle),0)
 
 #undef SDL_HELPERS_SYM

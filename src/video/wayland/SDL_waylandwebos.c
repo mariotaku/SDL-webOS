@@ -25,6 +25,7 @@
 
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
 
+#include "../../core/webos/SDL_webos_libs.h"
 #include "../../events/SDL_events_c.h"
 #include "SDL_hints.h"
 #include "SDL_waylandwebos.h"
@@ -77,10 +78,27 @@ int WaylandWebOS_SetupSurface(SDL_WindowData *data)
 
 static void webos_shell_handle_state(void *data, struct wl_webos_shell_surface *wl_webos_shell_surface, uint32_t state)
 {
+    SDL_WindowData *d = data;
+    if (state == WL_WEBOS_SHELL_SURFACE_STATE_MINIMIZED) {
+        HELPERS_HProcessAppState(3);
+        SDL_SendWindowEvent(d->sdlwindow, SDL_WINDOWEVENT_MINIMIZED, 0, 0);
+        SDL_SendAppEvent(SDL_APP_WILLENTERBACKGROUND);
+        SDL_SendAppEvent(SDL_APP_DIDENTERBACKGROUND);
+    } else if (state == WL_WEBOS_SHELL_SURFACE_STATE_FULLSCREEN) {
+        if (d->webos_shell_state < WL_WEBOS_SHELL_SURFACE_STATE_MAXIMIZED) {
+            SDL_SendWindowEvent(d->sdlwindow, SDL_WINDOWEVENT_RESTORED, 0, 0);
+            SDL_SendAppEvent(SDL_APP_WILLENTERFOREGROUND);
+            SDL_SendAppEvent(SDL_APP_DIDENTERFOREGROUND);
+            HELPERS_HProcessAppState(0);
+        }
+    }
+    d->webos_shell_state = state;
 }
 
 static void webos_shell_handle_position(void *data, struct wl_webos_shell_surface *wl_webos_shell_surface, int32_t x, int32_t y)
 {
+    SDL_WindowData *d = data;
+    SDL_SendWindowEvent(d->sdlwindow, SDL_WINDOWEVENT_MOVED, x, y);
 }
 
 static void webos_shell_handle_close(void *data, struct wl_webos_shell_surface *wl_webos_shell_surface)
@@ -96,6 +114,10 @@ static void webos_shell_handle_exposed(void *data, struct wl_webos_shell_surface
 
 static void webos_shell_handle_state_about_to_change(void *data, struct wl_webos_shell_surface *wl_webos_shell_surface, uint32_t state)
 {
+    if (state != WL_WEBOS_SHELL_SURFACE_STATE_MINIMIZED) {
+        return;
+    }
+    SDL_SendAppEvent(SDL_APP_WILLENTERBACKGROUND);
 }
 
 static void webos_shell_handle_addon_status_changed(void *data, struct wl_webos_shell_surface *wl_webos_shell_surface, uint32_t addon_status)
