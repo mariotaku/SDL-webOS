@@ -57,7 +57,7 @@ static int callback(LSHandle *sh, LSMessage *reply, void *ctx)
     SDL_LockMutex(context->mutex);
     context->finished = SDL_TRUE;
     if (context->output) {
-        *context->output = strdup(HELPERS_HLunaServiceMessage(reply));
+        *context->output = SDL_strdup(HELPERS_HLunaServiceMessage(reply));
     }
     SDL_CondSignal(context->cond);
     SDL_UnlockMutex(context->mutex);

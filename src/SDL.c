@@ -36,8 +36,8 @@
 
 /* this checks for HAVE_DBUS_DBUS_H internally. */
 #include "core/linux/SDL_dbus.h"
-#include "core/webos/SDL_webos_libs.h"
 #include "core/webos/SDL_webos_init.h"
+#include "core/webos/SDL_webos_libs.h"
 
 #if defined(__EMSCRIPTEN__)
 #include <emscripten.h>
@@ -46,10 +46,10 @@
 /* Initialization code for SDL */
 
 #include "SDL.h"
-#include "SDL_bits.h"
-#include "SDL_revision.h"
 #include "SDL_assert_c.h"
+#include "SDL_bits.h"
 #include "SDL_log_c.h"
+#include "SDL_revision.h"
 #include "events/SDL_events_c.h"
 #include "haptic/SDL_haptic_c.h"
 #include "joystick/SDL_joystick_c.h"
@@ -187,8 +187,11 @@ int SDL_InitSubSystem(Uint32 flags)
     if (SDL_webOSLoadLibraries() < 0) {
         return SDL_SetError("Failed to load webOS libraries");
     }
+    SDL_webOSInitLSHandle();
     if (!SDL_webOSAppRegistered()) {
-        SDL_webOSRegisterApp();
+        if (SDL_webOSRegisterApp() != 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to register app");
+        }
     }
 #endif
 
@@ -554,7 +557,7 @@ const char *SDL_GetRevision(void)
 /* Get the library source revision number */
 int SDL_GetRevisionNumber(void)
 {
-    return 0;  /* doesn't make sense without Mercurial. */
+    return 0; /* doesn't make sense without Mercurial. */
 }
 
 /* Get the name of the platform */

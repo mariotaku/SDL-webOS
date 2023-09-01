@@ -97,9 +97,4 @@ void SDL_webOSDestroyExportedWindow(const char *windowId)
     return dev->WebOSDestroyExportedWindow(dev, windowId);
 }
 
-SDL_bool SDL_webOSSetLSHandle(LSHandle *handle)
-{
-
-}
-
 #endif // __WEBOS__

@@ -27,8 +27,8 @@ extern int SDL_webOSLoadLibraries();
 
 extern void SDL_webOSUnloadLibraries();
 
-#define SDL_HELPERS_SYM(rc, fn, params)        \
-    typedef rc(*SDL_DYNHELPERSFN_##fn) params; \
+#define SDL_HELPERS_SYM(rc, fn, params, required) \
+    typedef rc(*SDL_DYNHELPERSFN_##fn) params;    \
     extern SDL_DYNHELPERSFN_##fn HELPERS_##fn;
 #include "SDL_webos_helpers_sym.h"
 

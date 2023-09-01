@@ -23,6 +23,8 @@
 #ifndef SDL_webos_init_h_
 #define SDL_webos_init_h_
 
+extern void SDL_webOSInitLSHandle();
+
 extern SDL_bool SDL_webOSAppRegistered();
 
 extern void SDL_webOSAppQuited();

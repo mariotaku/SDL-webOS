@@ -53,16 +53,20 @@ typedef struct _HString HString;
 #endif // SDL_webos_helpers_types_
 
 #ifndef SDL_HELPERS_SYM
-#define SDL_HELPERS_SYM(rc,fn,params)
+#define SDL_HELPERS_SYM(rc,fn,params,required)
 #endif
 
-SDL_HELPERS_SYM(int, HLunaServiceCall, (const char *uri, const char *payload, HContext *context))
-SDL_HELPERS_SYM(const char*, HLunaServiceMessage, (LSMessage *msg))
-SDL_HELPERS_SYM(HJson*, HJson_create, (const char *jsonStr))
-SDL_HELPERS_SYM(void, HJson_free, (HJson *hjson))
-SDL_HELPERS_SYM(int, HJson_valueExists, (HJson *hjson, const char *valueName))
-SDL_HELPERS_SYM(int, HJson_getInt, (HJson *hjson, const char *valueName))
-SDL_HELPERS_SYM(int, HJson_getBool, (HJson *hjson, const char *valueName))
+SDL_HELPERS_SYM(int, HLunaServiceCall, (const char *uri, const char *payload, HContext *context),1)
+SDL_HELPERS_SYM(const char*, HLunaServiceMessage, (LSMessage *msg),1)
+SDL_HELPERS_SYM(HJson*, HJson_create, (const char *jsonStr),1)
+SDL_HELPERS_SYM(void, HJson_free, (HJson *hjson),1)
+SDL_HELPERS_SYM(int, HJson_valueExists, (HJson *hjson, const char *valueName),1)
+SDL_HELPERS_SYM(int, HJson_getInt, (HJson *hjson, const char *valueName, int* out),1)
+SDL_HELPERS_SYM(int, HJson_getBool, (HJson *hjson, const char *valueName, int* out),1)
+SDL_HELPERS_SYM(HString*, HJson_getValue, (HJson *hjson, const char *valueName),1)
+SDL_HELPERS_SYM(const char*, HString_toStr, (HString *str),1)
+SDL_HELPERS_SYM(void, HString_free, (HString *str),1)
+SDL_HELPERS_SYM(void, HNDLSetLSHandle, (LSHandle *handle),0)
 
 #undef SDL_HELPERS_SYM
 
