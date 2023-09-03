@@ -59,7 +59,7 @@
 #include "viewporter-client-protocol.h"
 #include "primary-selection-unstable-v1-client-protocol.h"
 #include "fractional-scale-v1-client-protocol.h"
-#include "webos-shell-client-protocol.h"
+#include "webos-client-protocol.h"
 
 #ifdef HAVE_LIBDECOR_H
 #include <libdecor.h>

@@ -29,7 +29,28 @@
 #include "../../events/SDL_events_c.h"
 #include "SDL_hints.h"
 #include "SDL_waylandwebos.h"
-#include "webos-shell-client-protocol.h"
+#include "webos-client-protocol.h"
+
+#ifndef WL_WEBOS_SHELL_SURFACE_STATE_ENUM
+#define WL_WEBOS_SHELL_SURFACE_STATE_ENUM
+/**
+ * @ingroup iface_wl_webos_shell_surface
+ * the state of the surface
+ *
+ * The state provides info to the client on how the compositor has placed
+ * the surface.
+ *
+ * The default state will indicate to the client that it is windowed. The
+ * "position_changed" event will tell the position in screen coordinates
+ * when the surface is in this state.
+ */
+enum wl_webos_shell_surface_state {
+    WL_WEBOS_SHELL_SURFACE_STATE_DEFAULT = 0,
+    WL_WEBOS_SHELL_SURFACE_STATE_MINIMIZED = 1,
+    WL_WEBOS_SHELL_SURFACE_STATE_MAXIMIZED = 2,
+    WL_WEBOS_SHELL_SURFACE_STATE_FULLSCREEN = 3,
+};
+#endif /* WL_WEBOS_SHELL_SURFACE_STATE_ENUM */
 
 static void webos_shell_handle_state(void *data, struct wl_webos_shell_surface *wl_webos_shell_surface, uint32_t state);
 
@@ -41,15 +62,12 @@ static void webos_shell_handle_exposed(void *data, struct wl_webos_shell_surface
 
 static void webos_shell_handle_state_about_to_change(void *data, struct wl_webos_shell_surface *wl_webos_shell_surface, uint32_t state);
 
-static void webos_shell_handle_addon_status_changed(void *data, struct wl_webos_shell_surface *wl_webos_shell_surface, uint32_t addon_status);
-
 const static struct wl_webos_shell_surface_listener webos_shell_surface_listener = {
     .state_changed = webos_shell_handle_state,
     .position_changed = webos_shell_handle_position,
     .close = webos_shell_handle_close,
     .exposed = webos_shell_handle_exposed,
     .state_about_to_change = webos_shell_handle_state_about_to_change,
-    .addon_status_changed = webos_shell_handle_addon_status_changed,
 };
 
 int WaylandWebOS_SetupSurface(SDL_WindowData *data)
@@ -118,10 +136,6 @@ static void webos_shell_handle_state_about_to_change(void *data, struct wl_webos
         return;
     }
     SDL_SendAppEvent(SDL_APP_WILLENTERBACKGROUND);
-}
-
-static void webos_shell_handle_addon_status_changed(void *data, struct wl_webos_shell_surface *wl_webos_shell_surface, uint32_t addon_status)
-{
 }
 
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
