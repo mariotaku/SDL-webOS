@@ -91,6 +91,7 @@ int WaylandWebOS_SetupSurface(SDL_WindowData *data)
     } else {
         data->webos_cursor_sleep_time = 300000;
     }
+    wl_webos_shell_surface_set_property(data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_FORCESTRETCH", "true");
     return 0;
 }
 

@@ -43,6 +43,7 @@
 #include "text-input-unstable-v3-client-protocol.h"
 #include "tablet-unstable-v2-client-protocol.h"
 #include "primary-selection-unstable-v1-client-protocol.h"
+#include "webos-client-protocol.h"
 
 #ifdef HAVE_LIBDECOR_H
 #include <libdecor.h>
@@ -1420,6 +1421,18 @@ static const struct zwp_primary_selection_source_v1_listener primary_selection_s
     primary_selection_source_cancelled,
 };
 
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+static void webos_seat_info(void *data, struct wl_webos_seat *wl_webos_seat, uint32_t id, const char *name,
+                     uint32_t designator, uint32_t capabilities)
+{
+    struct SDL_WaylandInput *input = data;
+}
+
+static const struct wl_webos_seat_listener webos_seat_listener = {
+    webos_seat_info,
+};
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
+
 SDL_WaylandDataSource *Wayland_data_source_create(_THIS)
 {
     SDL_WaylandDataSource *data_source = NULL;
@@ -2368,6 +2381,15 @@ void Wayland_display_add_input(SDL_VideoData *d, uint32_t id, uint32_t version)
     if (d->tablet_manager) {
         Wayland_input_add_tablet(input, d->tablet_manager);
     }
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (d->webos_input_manager) {
+        input->webos_seat = wl_webos_input_manager_get_webos_seat(d->webos_input_manager, input->seat);
+        if (input->webos_seat) {
+            wl_webos_seat_add_listener(input->webos_seat, &webos_seat_listener, input);
+        }
+    }
+#endif
 
     WAYLAND_wl_display_flush(d->display);
 }

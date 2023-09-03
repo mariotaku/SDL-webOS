@@ -2081,6 +2081,7 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
         if (data->shell_surface.wl == NULL) {
             return SDL_SetError("Can't create shell surface");
         }
+        wl_shell_surface_set_class(data->shell_surface.wl, c->classname);
         wl_shell_surface_set_toplevel(data->shell_surface.wl);
     }
     if (c->shell.webos) {
@@ -2228,6 +2229,12 @@ void Wayland_SetWindowTitle(_THIS, SDL_Window *window)
     SDL_WindowData *wind = window->driverdata;
     SDL_VideoData *viddata = _this->driverdata;
     const char *title = window->title ? window->title : "";
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (wind->shell_surface.webos) {
+        wl_webos_shell_surface_set_property(wind->shell_surface.webos, "title", title);
+    }
+#endif
 
     if (wind->shell_surface_type == WAYLAND_SURFACE_XDG_POPUP) {
         return;

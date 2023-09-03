@@ -60,6 +60,7 @@
 #include "primary-selection-unstable-v1-client-protocol.h"
 #include "fractional-scale-v1-client-protocol.h"
 #include "webos-client-protocol.h"
+#include "starfish-client-protocol.h"
 
 #ifdef HAVE_LIBDECOR_H
 #include <libdecor.h>
@@ -818,6 +819,19 @@ static const struct qt_windowmanager_listener windowmanager_listener = {
 };
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH */
 
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+
+static void webos_cursor_visibility(void *data, struct wl_webos_input_manager *wl_webos_input_manager,
+                                    uint32_t visibility, struct wl_webos_seat *seat) {
+    SDL_VideoData *d = data;
+    (void) d;
+}
+
+static const struct wl_webos_input_manager_listener webos_input_manager_listener = {
+    webos_cursor_visibility
+};
+#endif
+
 static void handle_ping_xdg_wm_base(void *data, struct xdg_wm_base *xdg, uint32_t serial)
 {
     xdg_wm_base_pong(xdg, serial);
@@ -908,6 +922,11 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
     } else if (SDL_strcmp(interface, "wl_webos_foreign") == 0) {
         d->webos_foreign = wl_registry_bind(registry, id, &wl_webos_foreign_interface, 1);
         d->webos_foreign_table = SDL_calloc(1, sizeof(*d->webos_foreign_table));
+    } else if (SDL_strcmp(interface, "wl_webos_input_manager") == 0) {
+        d->webos_input_manager = wl_registry_bind(registry, id, &wl_webos_input_manager_interface, 1);
+        wl_webos_input_manager_add_listener(d->webos_input_manager, &webos_input_manager_listener, d);
+    } else if (SDL_strcmp(interface, "wl_starfish_pointer") == 0) {
+        d->starfish_pointer = wl_registry_bind(registry, id, &wl_starfish_pointer_interface, 1);
 #endif
     }
 }

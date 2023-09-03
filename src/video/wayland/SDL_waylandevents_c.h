@@ -89,6 +89,9 @@ struct SDL_WaylandInput
     struct wl_pointer *pointer;
     struct wl_touch *touch;
     struct wl_keyboard *keyboard;
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    struct wl_webos_seat *webos_seat;
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
     SDL_WaylandDataDevice *data_device;
     SDL_WaylandPrimarySelectionDevice *primary_selection_device;
     SDL_WaylandTextInput *text_input;

@@ -99,6 +99,8 @@ typedef struct
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH */
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
     struct wl_webos_foreign *webos_foreign;
+    struct wl_webos_input_manager *webos_input_manager;
+    struct wl_starfish_pointer *starfish_pointer;
     struct {
         int count;
         struct webos_foreign_window *windows;
