@@ -11,12 +11,17 @@
 #define SDL_PBNJSON_SYM(rc, fn, params)     SDL_DYNPBNJSONFN_##fn PBNJSON_##fn;
 #include "SDL_webos_pbnjson_sym.h"
 
+#define SDL_IMG_SYM(rc, fn, params)     SDL_DYNIMGFN_##fn IMG_##fn;
+#include "SDL_webos_img_sym.h"
+
 static void *WebOSGetSym(void *object, const char *name, int required, int *valid);
 static void *LibHelpersHandle = NULL;
 static void *LibPbnjsonHandle = NULL;
+static void *LibImgHandle = NULL;
 
 static int LoadHelpers();
 static int LoadPbnjson();
+static int LoadImg();
 
 int SDL_webOSLoadLibraries()
 {
@@ -25,6 +30,9 @@ int SDL_webOSLoadLibraries()
         return ret;
     }
     if ((ret = LoadPbnjson()) != 0) {
+        return ret;
+    }
+    if ((ret = LoadImg()) != 0) {
         return ret;
     }
     return ret;
@@ -45,6 +53,12 @@ void SDL_webOSUnloadLibraries()
         SDL_UnloadObject(LibPbnjsonHandle);
     }
     LibPbnjsonHandle = NULL;
+#define SDL_IMG_SYM(rc, fn, params) IMG_##fn = NULL;
+#include "SDL_webos_img_sym.h"
+    if (LibImgHandle != NULL) {
+        SDL_UnloadObject(LibImgHandle);
+    }
+    LibImgHandle = NULL;
 }
 
 static void *WebOSGetSym(void *object, const char *name, int required, int *valid)
@@ -87,6 +101,23 @@ int LoadPbnjson()
     if (!valid) {
         SDL_webOSUnloadLibraries();
         return SDL_SetError("Failed to load libpbnjson_c");
+    }
+    return 0;
+}
+
+int LoadImg()
+{
+    int valid = 1;
+    LibImgHandle = SDL_LoadObject("libSDL2_image-2.0.so.0");
+    if (LibImgHandle == NULL) {
+        SDL_webOSUnloadLibraries();
+        return SDL_SetError("Failed to load libSDL2_image");
+    }
+#define SDL_IMG_SYM(rc, fn, params) IMG_##fn = (SDL_DYNIMGFN_##fn)WebOSGetSym(LibImgHandle, #fn, 1, &valid);
+#include "SDL_webos_img_sym.h"
+    if (!valid) {
+        SDL_webOSUnloadLibraries();
+        return SDL_SetError("Failed to load libSDL2_image");
     }
     return 0;
 }

@@ -18,37 +18,17 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
-#include "../../SDL_internal.h"
 
-#ifndef SDL_webos_libs_h_
-#define SDL_webos_libs_h_
+/* *INDENT-OFF* */ /* clang-format off */
 
-#include "SDL_surface.h"
+#ifndef SDL_IMG_SYM
+#define SDL_IMG_SYM(rc,fn,params)
+#endif
 
-extern int SDL_webOSLoadLibraries();
+SDL_IMG_SYM(SDL_Surface*, IMG_Load, (const char* file))
 
-extern void SDL_webOSUnloadLibraries();
+#undef SDL_IMG_SYM
 
-#define SDL_HELPERS_SYM(rc, fn, params)         \
-    typedef rc(*SDL_DYNHELPERSFN_##fn) params;  \
-    extern SDL_DYNHELPERSFN_##fn HELPERS_##fn;
-#define SDL_HELPERS_SYM_OPT(rc, fn, params)     \
-    typedef rc(*SDL_DYNHELPERSFN_##fn) params;  \
-    extern SDL_DYNHELPERSFN_##fn HELPERS_##fn;
-#include "SDL_webos_helpers_sym.h"
-
-
-#define SDL_PBNJSON_SYM(rc, fn, params)         \
-    typedef rc(*SDL_DYNPBNJSONFN_##fn) params;  \
-    extern SDL_DYNPBNJSONFN_##fn PBNJSON_##fn;
-#include "SDL_webos_pbnjson_sym.h"
-#include "SDL_webos_pbnjson_inlines.h"
-
-#define SDL_IMG_SYM(rc, fn, params)         \
-    typedef rc(*SDL_DYNIMGFN_##fn) params;  \
-    extern SDL_DYNIMGFN_##fn IMG_##fn;
-#include "SDL_webos_img_sym.h"
-
-#endif // SDL_webos_libs_h_
+/* *INDENT-ON* */ /* clang-format on */
 
 /* vi: set ts=4 sw=4 expandtab: */
