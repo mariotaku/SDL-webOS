@@ -20,28 +20,13 @@
 */
 #include "../../SDL_internal.h"
 
-#ifndef SDL_webos_libs_h_
-#define SDL_webos_libs_h_
+#ifndef SDL_webos_json_h_
+#define SDL_webos_json_h_
 
-extern int SDL_webOSLoadLibraries();
+#include "SDL_webos_libs.h"
 
-extern void SDL_webOSUnloadLibraries();
+extern jvalue_ref SDL_webOSJsonParse(const char* json, jdomparser_ref *parser);
 
-#define SDL_HELPERS_SYM(rc, fn, params)         \
-    typedef rc(*SDL_DYNHELPERSFN_##fn) params;  \
-    extern SDL_DYNHELPERSFN_##fn HELPERS_##fn;
-#define SDL_HELPERS_SYM_OPT(rc, fn, params)     \
-    typedef rc(*SDL_DYNHELPERSFN_##fn) params;  \
-    extern SDL_DYNHELPERSFN_##fn HELPERS_##fn;
-#include "SDL_webos_helpers_sym.h"
-
-
-#define SDL_PBNJSON_SYM(rc, fn, params)         \
-    typedef rc(*SDL_DYNPBNJSONFN_##fn) params;  \
-    extern SDL_DYNPBNJSONFN_##fn PBNJSON_##fn;
-#include "SDL_webos_pbnjson_sym.h"
-#include "SDL_webos_pbnjson_inlines.h"
-
-#endif // SDL_webos_libs_h_
+#endif // SDL_webos_json_h_
 
 /* vi: set ts=4 sw=4 expandtab: */

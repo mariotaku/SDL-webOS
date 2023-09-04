@@ -1,10 +1,11 @@
 #include "../../SDL_internal.h"
 
 #ifdef __WEBOS__
-#include "SDL_system.h"
 #include "SDL_error.h"
 #include "SDL_hints.h"
+#include "SDL_system.h"
 #include "SDL_webos_init.h"
+#include "SDL_webos_json.h"
 #include "SDL_webos_libs.h"
 #include "SDL_webos_luna.h"
 
@@ -69,8 +70,8 @@ int getNativeLifeCycleInterfaceVersion(const char *appId)
 {
     char payload[200];
     char *output = NULL;
-    HJson *json = NULL;
-    HString *value = NULL;
+    jdomparser_ref parser = NULL;
+    jvalue_ref parsed = NULL, appInfo = NULL, versionValue = NULL;
     int returnValue = 0, version = 0;
 
     snprintf(payload, sizeof(payload), "{\"id\":\"%s\"}", appId);
@@ -80,23 +81,26 @@ int getNativeLifeCycleInterfaceVersion(const char *appId)
     if (output == NULL) {
         return SDL_SetError("Call to luna://com.webos.applicationManager/getAppInfo didn't return any output");
     }
-    json = HELPERS_HJson_create(output);
-    if (json == NULL) {
+    parsed = SDL_webOSJsonParse(output, &parser);
+    if (parsed == NULL) {
+        if (parser != NULL) {
+            PBNJSON_jdomparser_release(&parser);
+        }
         SDL_free(output);
         return SDL_SetError("Failed to parse output of luna://com.webos.applicationManager/getAppInfo");
     }
-    HELPERS_HJson_getBool(json, "returnValue", &returnValue);
-    if (returnValue && (value = HELPERS_HJson_getValue(json, "appInfo")) != NULL) {
-        HJson *appInfo = HELPERS_HJson_create(HELPERS_HString_toStr(value));
-        HELPERS_HJson_getInt(appInfo, "nativeLifeCycleInterfaceVersion", &version);
-        HELPERS_HJson_free(appInfo);
-        HELPERS_HString_free(value);
+
+    PBNJSON_jboolean_get(PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("timestamp")), &returnValue);
+    if (returnValue && (appInfo = PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("appInfo")), PBNJSON_jis_object(appInfo))) {
+        versionValue = PBNJSON_jobject_get(appInfo, J_CSTR_TO_BUF("nativeLifeCycleInterfaceVersion"));
+        if (PBNJSON_jis_number(versionValue)) {
+            PBNJSON_jnumber_get_i32(versionValue, &version);
+        }
     }
     if (version == 0) {
         version = 1;
     }
-    HELPERS_HJson_free(json);
-    SDL_free(output);
+    PBNJSON_jdomparser_release(&parser);
     return version;
 }
 
