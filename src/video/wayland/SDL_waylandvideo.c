@@ -841,6 +841,14 @@ static const struct xdg_wm_base_listener shell_listener_xdg = {
     handle_ping_xdg_wm_base
 };
 
+static void handle_shm_format(void *data, struct wl_shm *wl_shm, uint32_t format) {
+
+}
+
+static const struct wl_shm_listener shm_listener = {
+    handle_shm_format, /* format */
+};
+
 #ifdef HAVE_LIBDECOR_H
 static void libdecor_error(struct libdecor *context,
                            enum libdecor_error error,
@@ -874,6 +882,7 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
         xdg_wm_base_add_listener(d->shell.xdg, &shell_listener_xdg, NULL);
     } else if (SDL_strcmp(interface, "wl_shm") == 0) {
         d->shm = wl_registry_bind(registry, id, &wl_shm_interface, 1);
+        wl_shm_add_listener(d->shm, &shm_listener, d);
     } else if (SDL_strcmp(interface, "zwp_relative_pointer_manager_v1") == 0) {
         Wayland_display_add_relative_pointer_manager(d, id);
     } else if (SDL_strcmp(interface, "zwp_pointer_constraints_v1") == 0) {
@@ -925,6 +934,8 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
     } else if (SDL_strcmp(interface, "wl_webos_input_manager") == 0) {
         d->webos_input_manager = wl_registry_bind(registry, id, &wl_webos_input_manager_interface, 1);
         wl_webos_input_manager_add_listener(d->webos_input_manager, &webos_input_manager_listener, d);
+    } else if (SDL_strcmp(interface, "wl_webos_surface_group_compositor") == 0) {
+        d->webos_surface_group_compositor = wl_registry_bind(registry, id, &wl_webos_surface_group_compositor_interface, 1);
     } else if (SDL_strcmp(interface, "wl_starfish_pointer") == 0) {
         d->starfish_pointer = wl_registry_bind(registry, id, &wl_starfish_pointer_interface, 1);
 #endif

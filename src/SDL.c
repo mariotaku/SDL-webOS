@@ -120,6 +120,9 @@ static SDL_bool SDL_MainIsReady = SDL_TRUE;
 #endif
 static SDL_bool SDL_bInMainQuit = SDL_FALSE;
 static Uint8 SDL_SubsystemRefCount[32];
+#ifdef __WEBOS__
+static SDL_bool SDL_WebOSInitCalled = SDL_FALSE;
+#endif
 
 /* Private helper to increment a subsystem's ref counter. */
 static void SDL_PrivateSubsystemRefCountIncr(Uint32 subsystem)
@@ -187,10 +190,13 @@ int SDL_InitSubSystem(Uint32 flags)
     if (SDL_webOSLoadLibraries() < 0) {
         return SDL_SetError("Failed to load webOS libraries");
     }
-    SDL_webOSInitLSHandle();
-    if (!SDL_webOSAppRegistered()) {
-        if (SDL_webOSRegisterApp() != 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to register app");
+    if (!SDL_WebOSInitCalled) {
+        SDL_WebOSInitCalled = SDL_TRUE;
+        SDL_webOSInitLSHandle();
+        if (!SDL_webOSAppRegistered()) {
+            if (SDL_webOSRegisterApp() != 0) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to register app");
+            }
         }
     }
 #endif

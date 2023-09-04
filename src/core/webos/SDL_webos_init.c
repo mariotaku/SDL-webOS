@@ -120,10 +120,12 @@ static SDL_bool registerApp(const char *appId, int interfaceVersion)
 
 static int lifecycleCallbackVersion1(LSHandle *sh, LSMessage *reply, void *ctx)
 {
+    SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Lifecycle callback: %s", HELPERS_HLunaServiceMessage(reply));
     return 0;
 }
 static int lifecycleCallbackVersion2(LSHandle *sh, LSMessage *reply, void *ctx)
 {
+    SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Lifecycle callback: %s", HELPERS_HLunaServiceMessage(reply));
     return 0;
 }
 
