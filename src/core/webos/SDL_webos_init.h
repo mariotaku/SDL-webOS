@@ -31,6 +31,8 @@ extern void SDL_webOSAppQuited();
 
 extern int SDL_webOSRegisterApp();
 
+extern void SDL_webOSUnregisterApp();
+
 #endif // SDL_webos_init_h_
 
 /* vi: set ts=4 sw=4 expandtab: */

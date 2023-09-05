@@ -515,6 +515,7 @@ void SDL_Quit(void)
     SDL_DBus_Quit();
 #endif
 #if __WEBOS__
+    SDL_webOSUnregisterApp();
     SDL_webOSUnloadLibraries();
 #endif
 

@@ -57,6 +57,7 @@ typedef struct HContext {
 #endif // SDL_HELPERS_SYM_OPT
 
 SDL_HELPERS_SYM(int, HLunaServiceCall, (const char *uri, const char *payload, HContext *context))
+SDL_HELPERS_SYM(int, HUnregisterServiceCallback, (HContext *context))
 SDL_HELPERS_SYM(const char*, HLunaServiceMessage, (LSMessage *msg))
 SDL_HELPERS_SYM(void, HProcessAppState, (int state))
 SDL_HELPERS_SYM_OPT(void, HNDLSetLSHandle, (LSHandle *handle))
