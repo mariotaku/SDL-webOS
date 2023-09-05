@@ -67,7 +67,8 @@ SDL_bool SDL_webOSGetRefreshRate(int *rate) {
                             if (config_buf.m_str == NULL) {
                                 continue;
                             }
-                            SDL_strlcpy(value, config_buf.m_str, SDL_arraysize(value));
+                            SDL_zeroa(value);
+                            SDL_memcpy(value, config_buf.m_str, SDL_min(config_buf.m_len, 15));
                             value_num = SDL_strtol(value, NULL, 10);
                             if (value_num > 0) {
                                 *rate = value_num;

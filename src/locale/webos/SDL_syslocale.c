@@ -46,14 +46,17 @@ void SDL_SYS_GetPreferredLocales(char *buf, size_t buflen)
     locale = PBNJSON_jobject_get_nested(parsed, "settings", "localeInfo", "locales", "UI", NULL);
     if (PBNJSON_jis_string(locale)) {
         raw_buffer locale_buf = PBNJSON_jstring_get_fast(locale);
-        size_t len = SDL_min(locale_buf.m_len, buflen);
-        SDL_strlcpy(buf, locale_buf.m_str, len);
-        for (size_t i = 0; i < len; i++) {
-            if (buf[i] == '-') {
-                buf[i] = '_';
+        if (locale_buf.m_len < buflen) {
+            for (size_t i = 0; i < locale_buf.m_len; i++) {
+                char ch = locale_buf.m_str[i];
+                if (ch == '-') {
+                    buf[i] = '_';
+                } else {
+                    buf[i] = ch;
+                }
             }
+            buf[locale_buf.m_len] = '\0';
         }
-        buf[len] = '\0';
     }
     PBNJSON_jdomparser_release(&parser);
     SDL_free(response);
