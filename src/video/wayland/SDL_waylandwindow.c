@@ -2090,7 +2090,7 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
         if (data->shell_surface.webos == NULL) {
             return SDL_SetError("Can't create webos shell surface");
         }
-        WaylandWebOS_SetupSurface(data);
+        WaylandWebOS_SetupSurface(_this, data);
     }
 #endif
 

@@ -450,6 +450,7 @@ struct SDL_VideoDevice
 
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
     SDL_mutex *webos_foreign_lock;
+    Uint32 webos_cursor_sleep_time;
 #endif
 
     /* * * */

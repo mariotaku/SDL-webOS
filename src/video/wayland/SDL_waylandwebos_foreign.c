@@ -39,23 +39,6 @@ static struct wl_webos_exported_listener exported_listener = {
     .window_id_assigned = WindowIdAssigned,
 };
 
-void WaylandWebOS_CleanUpForeign(_THIS)
-{
-    SDL_VideoData *data = _this->driverdata;
-    SDL_LockMutex(_this->webos_foreign_lock);
-    if (data->webos_foreign_table != NULL) {
-        webos_foreign_window *window = data->webos_foreign_table->windows;
-        while (window != NULL) {
-            _this->WebOSDestroyExportedWindow(_this, window->window_id);
-            window = data->webos_foreign_table->windows;
-        }
-        SDL_free(data->webos_foreign_table);
-        data->webos_foreign_table = NULL;
-    }
-    SDL_UnlockMutex(_this->webos_foreign_lock);
-    SDL_DestroyMutex(_this->webos_foreign_lock);
-}
-
 const char *WaylandWebOS_CreateExportedWindow(_THIS, SDL_webOSExportedWindowType type)
 {
     SDL_VideoData *data = _this->driverdata;

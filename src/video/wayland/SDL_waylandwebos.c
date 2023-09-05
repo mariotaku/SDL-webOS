@@ -29,6 +29,7 @@
 #include "../../events/SDL_events_c.h"
 #include "SDL_hints.h"
 #include "SDL_waylandwebos.h"
+#include "SDL_waylandwebos_foreign.h"
 #include "webos-client-protocol.h"
 
 #ifndef WL_WEBOS_SHELL_SURFACE_STATE_ENUM
@@ -70,10 +71,38 @@ const static struct wl_webos_shell_surface_listener webos_shell_surface_listener
     .state_about_to_change = webos_shell_handle_state_about_to_change,
 };
 
-int WaylandWebOS_SetupSurface(SDL_WindowData *data)
+void WaylandWebOS_VideoInit(_THIS)
+{
+    const char *hintValue = NULL;
+    _this->webos_foreign_lock = SDL_CreateMutex();
+
+    if ((hintValue = SDL_GetHint(SDL_HINT_WEBOS_CURSOR_SLEEP_TIME)) != NULL) {
+        _this->webos_cursor_sleep_time = strtol(hintValue, NULL, 10);
+    } else {
+        _this->webos_cursor_sleep_time = 300000;
+    }
+}
+
+void WaylandWebOS_VideoCleanUp(_THIS)
+{
+    SDL_VideoData *data = _this->driverdata;
+    SDL_LockMutex(_this->webos_foreign_lock);
+    if (data->webos_foreign_table != NULL) {
+        webos_foreign_window *window = data->webos_foreign_table->windows;
+        while (window != NULL) {
+            _this->WebOSDestroyExportedWindow(_this, window->window_id);
+            window = data->webos_foreign_table->windows;
+        }
+        SDL_free(data->webos_foreign_table);
+        data->webos_foreign_table = NULL;
+    }
+    SDL_UnlockMutex(_this->webos_foreign_lock);
+    SDL_DestroyMutex(_this->webos_foreign_lock);
+}
+
+int WaylandWebOS_SetupSurface(_THIS, SDL_WindowData *data)
 {
     const char *appId;
-    const char *hintValue;
     appId = SDL_getenv("APPID");
     if (appId == NULL) {
         return SDL_SetError("APPID environment variable is not set");
@@ -86,12 +115,9 @@ int WaylandWebOS_SetupSurface(SDL_WindowData *data)
     if (SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_EXIT, SDL_FALSE)) {
         wl_webos_shell_surface_set_property(data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_KEYS_EXIT", "true");
     }
-    if ((hintValue = SDL_GetHint(SDL_HINT_WEBOS_CURSOR_SLEEP_TIME)) != NULL) {
-        data->webos_cursor_sleep_time = strtol(hintValue, NULL, 10);
-    } else {
-        data->webos_cursor_sleep_time = 300000;
+    if (SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_FORCE_STRETCH, SDL_TRUE)) {
+        wl_webos_shell_surface_set_property(data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_FORCESTRETCH", "true");
     }
-    wl_webos_shell_surface_set_property(data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_FORCESTRETCH", "true");
     return 0;
 }
 

@@ -937,7 +937,9 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
     } else if (SDL_strcmp(interface, "wl_webos_surface_group_compositor") == 0) {
         d->webos_surface_group_compositor = wl_registry_bind(registry, id, &wl_webos_surface_group_compositor_interface, 1);
     } else if (SDL_strcmp(interface, "wl_starfish_pointer") == 0) {
+        SDL_VideoDevice *device = SDL_GetVideoDevice();
         d->starfish_pointer = wl_registry_bind(registry, id, &wl_starfish_pointer_interface, 1);
+        wl_starfish_pointer_set_mrcu_standby_timer(d->starfish_pointer, device->webos_cursor_sleep_time);
 #endif
     }
 }
@@ -1020,7 +1022,7 @@ int Wayland_VideoInit(_THIS)
     // Second roundtrip to receive all output events.
     WAYLAND_wl_display_roundtrip(data->display);
 
-    _this->webos_foreign_lock = SDL_CreateMutex();
+    WaylandWebOS_VideoInit(_this);
 
     Wayland_InitMouse();
 
@@ -1072,7 +1074,7 @@ static void Wayland_VideoCleanup(_THIS)
     Wayland_QuitWin(data);
     Wayland_FiniMouse(data);
 
-    WaylandWebOS_CleanUpForeign(_this);
+    WaylandWebOS_VideoCleanUp(_this);
 
     for (i = _this->num_displays - 1; i >= 0; --i) {
         SDL_VideoDisplay *display = &_this->displays[i];

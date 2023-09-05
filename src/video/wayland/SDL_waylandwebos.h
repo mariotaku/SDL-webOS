@@ -29,7 +29,11 @@
 #include "SDL_system.h"
 #include "SDL_waylandwindow.h"
 
-extern int WaylandWebOS_SetupSurface(SDL_WindowData *data);
+extern void WaylandWebOS_VideoInit(_THIS);
+
+extern void WaylandWebOS_VideoCleanUp(_THIS);
+
+extern int WaylandWebOS_SetupSurface(_THIS, SDL_WindowData *data);
 
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 

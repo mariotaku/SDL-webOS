@@ -37,8 +37,6 @@ typedef struct webos_foreign_window
     struct webos_foreign_window *next;
 } webos_foreign_window;
 
-extern void WaylandWebOS_CleanUpForeign(_THIS);
-
 extern const char *WaylandWebOS_CreateExportedWindow(_THIS, SDL_webOSExportedWindowType type);
 
 extern SDL_bool WaylandWebOS_SetExportedWindow(_THIS, const char *windowId, SDL_Rect *src, SDL_Rect *dst);
