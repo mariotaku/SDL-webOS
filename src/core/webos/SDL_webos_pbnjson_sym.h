@@ -37,6 +37,7 @@ SDL_PBNJSON_SYM(const char*, jvalue_stringify, (jvalue_ref val))
 SDL_PBNJSON_SYM(ConversionResultFlags, jboolean_get, (jvalue_ref val, int *boolean))
 SDL_PBNJSON_SYM(ConversionResultFlags, jnumber_get_i32, (jvalue_ref val, int32_t *number))
 SDL_PBNJSON_SYM(jvalue_ref, jstring_create_nocopy, (raw_buffer val))
+SDL_PBNJSON_SYM(raw_buffer, jstring_get_fast, (jvalue_ref str))
 SDL_PBNJSON_SYM(void, j_release, (jvalue_ref *val))
 
 SDL_PBNJSON_SYM(jschema_ref, jschema_all, ())

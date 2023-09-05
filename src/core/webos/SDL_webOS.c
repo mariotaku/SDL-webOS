@@ -1,12 +1,14 @@
 #include "../../SDL_internal.h"
 
 #ifdef __WEBOS__
+
 #include "SDL_system.h"
+#include "SDL_webos_json.h"
+#include "SDL_webos_luna.h"
 #include "../../video/SDL_sysvideo.h"
 #include "../../events/SDL_mouse_c.h"
 
-SDL_bool SDL_webOSCursorVisibility(SDL_bool visible)
-{
+SDL_bool SDL_webOSCursorVisibility(SDL_bool visible) {
     SDL_Mouse *mouse = SDL_GetMouse();
     if (mouse == NULL) {
         SDL_SetError("Failed to set cursor visibility: No mouse");
@@ -19,21 +21,96 @@ SDL_bool SDL_webOSCursorVisibility(SDL_bool visible)
     return mouse->WebOSSetCursorVisibility(visible);
 }
 
-SDL_bool SDL_webOSGetPanelResolution(int *width, int *height)
-{
-    *width = 1920;
-    *height = 1080;
-    return SDL_TRUE;
+SDL_bool SDL_webOSGetPanelResolution(int *width, int *height) {
+    char *response = NULL;
+    SDL_bool result = SDL_FALSE;
+    if (SDL_webOSLunaServiceCallSync("luna://com.webos.service.panelcontroller/getPanelResolution", "{}", 1,
+                                     &response) && response != NULL) {
+        jdomparser_ref parser = NULL;
+        jvalue_ref parsed;
+        if ((parsed = SDL_webOSJsonParse(response, &parser, 1)) != NULL) {
+            PBNJSON_jnumber_get_i32(PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("width")), width);
+            PBNJSON_jnumber_get_i32(PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("height")), height);
+            result = SDL_TRUE;
+            PBNJSON_jdomparser_release(&parser);
+        }
+        SDL_free(response);
+    }
+    if (SDL_webOSLunaServiceCallSync("luna://com.webos.service.tv.systemproperty/getSystemInfo",
+                                     "{\"keys\": [\"UHD\"]}", 1, &response) && response != NULL) {
+        jdomparser_ref parser = NULL;
+        jvalue_ref parsed;
+        if ((parsed = SDL_webOSJsonParse(response, &parser, 1)) != NULL) {
+            int uhd = 0;
+            PBNJSON_jboolean_get(PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("UHD")), &uhd);
+            if (uhd) {
+                *width = 3840;
+                *height = 2160;
+            } else {
+                *width = 1920;
+                *height = 1080;
+            }
+            result = SDL_TRUE;
+            PBNJSON_jdomparser_release(&parser);
+        }
+        SDL_free(response);
+    }
+    return result;
 }
 
-SDL_bool SDL_webOSGetRefreshRate(int *rate)
-{
-    *rate = 60;
-    return SDL_TRUE;
+SDL_bool SDL_webOSGetRefreshRate(int *rate) {
+    const char *uri = "luna://com.webos.service.config/getConfigs";
+    const char *payload = "{\"configNames\":[\"tv.hw.SoCOutputFrameRate\",\"tv.hw.supportFrc\"]}";
+    char *response = NULL;
+    SDL_bool result = SDL_FALSE;
+    if (SDL_webOSLunaServiceCallSync(uri, payload, 1, &response) && response != NULL) {
+        jdomparser_ref parser = NULL;
+        jvalue_ref parsed;
+        if ((parsed = SDL_webOSJsonParse(response, &parser, 1)) != NULL) {
+            jvalue_ref configs = PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("configs"));
+            if (PBNJSON_jis_object(configs)) {
+                const char *keys[] = {"tv.hw.SoCOutputFrameRate", "tv.hw.supportFrc", NULL};
+                for (int i = 0; keys[i] != NULL && !result; i++) {
+                    jvalue_ref config = PBNJSON_jobject_get(configs, PBNJSON_j_str_to_buffer(keys[i], strlen(keys[i])));
+                    switch (i) {
+                        case 0: {
+                            char value[16];
+                            int value_num;
+                            raw_buffer config_buf = PBNJSON_jstring_get_fast(config);
+                            if (config_buf.m_str == NULL) {
+                                continue;
+                            }
+                            SDL_strlcpy(value, config_buf.m_str, SDL_arraysize(value));
+                            value_num = SDL_strtol(value, NULL, 10);
+                            if (value_num > 0) {
+                                *rate = value_num;
+                            }
+                            result = SDL_TRUE;
+                            break;
+                        }
+                        case 1: {
+                            int support_frc = 0;
+                            PBNJSON_jboolean_get(config, &support_frc);
+                            if (support_frc) {
+                                *rate = 120;
+                            } else {
+                                *rate = 60;
+                            }
+                            result = SDL_TRUE;
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
+            }
+            PBNJSON_jdomparser_release(&parser);
+        }
+    }
+    return result;
 }
 
-const char *SDL_webOSCreateExportedWindow(SDL_webOSExportedWindowType type)
-{
+const char *SDL_webOSCreateExportedWindow(SDL_webOSExportedWindowType type) {
     SDL_VideoDevice *dev = SDL_GetVideoDevice();
 
     if (dev == NULL) {
@@ -47,8 +124,7 @@ const char *SDL_webOSCreateExportedWindow(SDL_webOSExportedWindowType type)
     return dev->WebOSCreateExportedWindow(dev, type);
 }
 
-SDL_bool SDL_webOSSetExportedWindow(const char *windowId, SDL_Rect *src, SDL_Rect *dst)
-{
+SDL_bool SDL_webOSSetExportedWindow(const char *windowId, SDL_Rect *src, SDL_Rect *dst) {
     SDL_VideoDevice *dev = SDL_GetVideoDevice();
 
     if (dev == NULL) {
@@ -62,8 +138,7 @@ SDL_bool SDL_webOSSetExportedWindow(const char *windowId, SDL_Rect *src, SDL_Rec
     return dev->WebOSSetExportedWindow(dev, windowId, src, dst);
 }
 
-SDL_bool SDL_webOSExportedSetCropRegion(const char *windowId, SDL_Rect *org, SDL_Rect *src, SDL_Rect *dst)
-{
+SDL_bool SDL_webOSExportedSetCropRegion(const char *windowId, SDL_Rect *org, SDL_Rect *src, SDL_Rect *dst) {
     SDL_VideoDevice *dev = SDL_GetVideoDevice();
 
     if (dev == NULL) {
@@ -77,8 +152,7 @@ SDL_bool SDL_webOSExportedSetCropRegion(const char *windowId, SDL_Rect *org, SDL
     return dev->WebOSExportedSetCropRegion(dev, windowId, org, src, dst);
 }
 
-SDL_bool SDL_webOSExportedSetProperty(const char *windowId, const char *name, const char *value)
-{
+SDL_bool SDL_webOSExportedSetProperty(const char *windowId, const char *name, const char *value) {
     SDL_VideoDevice *dev = SDL_GetVideoDevice();
 
     if (dev == NULL) {
@@ -92,8 +166,7 @@ SDL_bool SDL_webOSExportedSetProperty(const char *windowId, const char *name, co
     return dev->WebOSExportedSetProperty(dev, windowId, name, value);
 }
 
-void SDL_webOSDestroyExportedWindow(const char *windowId)
-{
+void SDL_webOSDestroyExportedWindow(const char *windowId) {
     SDL_VideoDevice *dev = SDL_GetVideoDevice();
 
     if (dev == NULL) {

@@ -25,7 +25,7 @@
 
 #include "SDL_webos_libs.h"
 
-extern jvalue_ref SDL_webOSJsonParse(const char* json, jdomparser_ref *parser);
+extern jvalue_ref SDL_webOSJsonParse(const char* json, jdomparser_ref *parser, SDL_bool failOnNegative);
 
 #endif // SDL_webos_json_h_
 

@@ -72,7 +72,7 @@ int getNativeLifeCycleInterfaceVersion(const char *appId)
     char *output = NULL;
     jdomparser_ref parser = NULL;
     jvalue_ref parsed = NULL, appInfo = NULL, versionValue = NULL;
-    int returnValue = 0, version = 0;
+    int version = 0;
 
     snprintf(payload, sizeof(payload), "{\"id\":\"%s\"}", appId);
     if (!SDL_webOSLunaServiceCallSync("luna://com.webos.applicationManager/getAppInfo", payload, 1, &output)) {
@@ -81,17 +81,13 @@ int getNativeLifeCycleInterfaceVersion(const char *appId)
     if (output == NULL) {
         return SDL_SetError("Call to luna://com.webos.applicationManager/getAppInfo didn't return any output");
     }
-    parsed = SDL_webOSJsonParse(output, &parser);
+    parsed = SDL_webOSJsonParse(output, &parser, 1);
     if (parsed == NULL) {
-        if (parser != NULL) {
-            PBNJSON_jdomparser_release(&parser);
-        }
         SDL_free(output);
         return SDL_SetError("Failed to parse output of luna://com.webos.applicationManager/getAppInfo");
     }
 
-    PBNJSON_jboolean_get(PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("timestamp")), &returnValue);
-    if (returnValue && (appInfo = PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("appInfo")), PBNJSON_jis_object(appInfo))) {
+    if (appInfo = PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("appInfo")), PBNJSON_jis_object(appInfo)) {
         versionValue = PBNJSON_jobject_get(appInfo, J_CSTR_TO_BUF("nativeLifeCycleInterfaceVersion"));
         if (PBNJSON_jis_number(versionValue)) {
             PBNJSON_jnumber_get_i32(versionValue, &version);
