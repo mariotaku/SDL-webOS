@@ -22,10 +22,6 @@ static int callback(LSHandle *sh, LSMessage *reply, void *ctx);
 
 SDL_bool SDL_webOSLunaServiceCallSync(const char *uri, const char *payload, int pub, char **output)
 {
-    if (!HELPERS_HLunaServiceCall) {
-        SDL_SetError("webOS libraries are not initialized");
-        return SDL_FALSE;
-    }
     struct HContextSync context = {
         .base.ctx = {
             .multiple = 0,
@@ -33,6 +29,10 @@ SDL_bool SDL_webOSLunaServiceCallSync(const char *uri, const char *payload, int 
             .callback = callback,
         }
     };
+    if (!HELPERS_HLunaServiceCall) {
+        SDL_SetError("webOS libraries are not initialized");
+        return SDL_FALSE;
+    }
 
     context.mutex = SDL_CreateMutex();
     context.cond = SDL_CreateCond();
