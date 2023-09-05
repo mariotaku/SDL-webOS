@@ -48,6 +48,11 @@ void SDL_SYS_GetPreferredLocales(char *buf, size_t buflen)
         raw_buffer locale_buf = PBNJSON_jstring_get_fast(locale);
         size_t len = SDL_min(locale_buf.m_len, buflen);
         SDL_strlcpy(buf, locale_buf.m_str, len);
+        for (size_t i = 0; i < len; i++) {
+            if (buf[i] == '-') {
+                buf[i] = '_';
+            }
+        }
         buf[len] = '\0';
     }
     PBNJSON_jdomparser_release(&parser);
