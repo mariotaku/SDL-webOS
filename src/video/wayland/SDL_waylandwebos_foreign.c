@@ -19,7 +19,7 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-/* Contributed by Thomas Perl <thomas.perl@jollamobile.com> */
+/* Contributed by Mariotaku <mariotaku.lee@gmail.com> */
 
 #include "../../SDL_internal.h"
 

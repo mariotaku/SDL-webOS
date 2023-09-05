@@ -45,6 +45,7 @@
 
 #if SDL_VIDEO_DRIVER_WAYLAND_WEBOS
 #include "../../core/webos/SDL_webos_libs.h"
+#include "SDL_waylandwebos_cursor.h"
 #include "webos-client-protocol.h"
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
@@ -444,31 +445,19 @@ static SDL_Cursor *Wayland_CreateSystemCursor(SDL_SystemCursor id)
     switch (id) {
         case SDL_SYSTEM_CURSOR_ARROW:
             hot_pos = 0;
-            surface = IMG_IMG_Load("/usr/share/im/cursorTypeAszMstN.png");
-            if (!surface) {
-                surface = IMG_IMG_Load("/usr/share/im/fhd/cursorTypeAszMstN.png");
-            }
+            surface = WaylandWebOS_LoadCursorSurface("A", "N");
             break;
         case SDL_SYSTEM_CURSOR_HAND:
             hot_pos = 0;
-            surface = IMG_IMG_Load("/usr/share/im/cursorTypePOINTszMstN.png");
-            if (!surface) {
-                surface = IMG_IMG_Load("/usr/share/im/fhd/cursorTypePOINTszMstN.png");
-            }
+            surface = WaylandWebOS_LoadCursorSurface("POINT", "N");
             break;
         case SDL_SYSTEM_CURSOR_NO:
             hot_pos = 0;
-            surface = IMG_IMG_Load("/usr/share/im/cursorTypeDisableszMstN.png");
-            if (!surface) {
-                surface = IMG_IMG_Load("/usr/share/im/fhd/cursorTypeDisableszMstN.png");
-            }
+            surface = WaylandWebOS_LoadCursorSurface("Disable", "N");
             break;
         default:
             hot_pos = 0xff;
-            surface = IMG_IMG_Load("/usr/share/im/cursorTypeAszMstN.png");
-            if (!surface) {
-                surface = IMG_IMG_Load("/usr/share/im/fhd/cursorTypeAszMstN.png");
-            }
+            surface = WaylandWebOS_LoadCursorSurface("A", "N");
             break;
     }
     if (!surface) {
