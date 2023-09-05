@@ -28,13 +28,22 @@ typedef struct LSMessage LSMessage;
 typedef unsigned long LSMessageToken;
 typedef struct HContext HContext;
 
-typedef int (*LSFilterFunc) (LSHandle *sh, LSMessage *reply, struct HContext *ctx);
+/**
+* @brief Callback function called on incoming message.
+*
+* @param  sh             service handle(#LSHandle)
+* @param  reply          incoming message
+* @param  ctx            helper context
+*
+* @return true if message is handled.
+*/
+typedef int (*HLSFilterFunc) (LSHandle *sh, LSMessage *reply, HContext *ctx);
 
 struct HContext {
     /**
      * @brief Callback function called on incoming message.
      */
-    LSFilterFunc callback;
+    HLSFilterFunc callback;
     void* userdata;
     void* unknown;
     /**

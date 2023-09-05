@@ -149,12 +149,12 @@ static SDL_bool registerApp(const char *appId, int interfaceVersion)
 static int lifecycleCallbackVersion1(LSHandle *sh, LSMessage *reply, HContext *ctx)
 {
     SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Lifecycle callback: %s", HELPERS_HLunaServiceMessage(reply));
-    return 0;
+    return 1;
 }
 static int lifecycleCallbackVersion2(LSHandle *sh, LSMessage *reply, HContext *ctx)
 {
     SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Lifecycle callback: %s", HELPERS_HLunaServiceMessage(reply));
-    return 0;
+    return 1;
 }
 
 static SDL_bool registerScreenSaverRequest(const char *appId)
@@ -193,12 +193,12 @@ static int screenSaverRequestCallback(LSHandle *sh, LSMessage *reply, HContext *
 
     device = SDL_GetVideoDevice();
     if (device == NULL || !device->suspend_screensaver) {
-        return 0;
+        return 1;
     }
 
     message = HELPERS_HLunaServiceMessage(reply);
     if ((parsed = SDL_webOSJsonParse(message, &parser, 1)) == NULL) {
-        return -1;
+        return 0;
     }
 
     timestamp = PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("timestamp"));
@@ -206,7 +206,7 @@ static int screenSaverRequestCallback(LSHandle *sh, LSMessage *reply, HContext *
     if (PBNJSON_jis_null(timestamp)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Skip invalid screensaver request (no timestamp)");
         PBNJSON_jdomparser_release(&parser);
-        return 0;
+        return 1;
     }
     response = PBNJSON_jobject_create_var(
         PBNJSON_jkeyval(J_CSTR_TO_JVAL("clientName"), PBNJSON_j_cstr_to_jval((const char *)ctx->userdata)),
@@ -218,7 +218,7 @@ static int screenSaverRequestCallback(LSHandle *sh, LSMessage *reply, HContext *
                              PBNJSON_jvalue_stringify(response), 1, NULL);
     PBNJSON_j_release(&response);
     PBNJSON_jdomparser_release(&parser);
-    return 0;
+    return 1;
 }
 
 #endif // __WEBOS__
