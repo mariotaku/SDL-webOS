@@ -1,6 +1,7 @@
 #include "../../SDL_internal.h"
 
 #ifdef __WEBOS__
+#include "../../events/SDL_events_c.h"
 #include "../../video/SDL_sysvideo.h"
 #include "SDL_error.h"
 #include "SDL_hints.h"
@@ -50,11 +51,6 @@ SDL_bool SDL_webOSAppRegistered()
     return s_appRegistered;
 }
 
-void SDL_webOSAppQuited()
-{
-    s_appRegistered = SDL_FALSE;
-}
-
 int SDL_webOSRegisterApp()
 {
     if (s_appRegistered) {
@@ -77,8 +73,10 @@ int SDL_webOSRegisterApp()
     return 0;
 }
 
-extern void SDL_webOSUnregisterApp() {
+void SDL_webOSUnregisterApp()
+{
     if (!s_appRegistered || !HELPERS_HUnregisterServiceCallback) {
+        s_appRegistered = SDL_FALSE;
         return;
     }
     if (s_AppLifecycleContext.callback != NULL) {
@@ -150,7 +148,7 @@ static int lifecycleCallbackVersion1(LSHandle *sh, LSMessage *reply, HContext *c
     jdomparser_ref parser = NULL;
     jvalue_ref parsed = NULL;
     jvalue_ref message = NULL;
-    SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Lifecycle callback: %s", HELPERS_HLunaServiceMessage(reply));
+    SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "lifecycleEvent(v1): %s", HELPERS_HLunaServiceMessage(reply));
     if ((parsed = SDL_webOSJsonParse(HELPERS_HLunaServiceMessage(reply), &parser, 1)) == NULL) {
         return 0;
     }
@@ -165,11 +163,32 @@ static int lifecycleCallbackVersion1(LSHandle *sh, LSMessage *reply, HContext *c
             }
         }
     }
+    PBNJSON_jdomparser_release(&parser);
     return 1;
 }
 static int lifecycleCallbackVersion2(LSHandle *sh, LSMessage *reply, HContext *ctx)
 {
-    SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Lifecycle callback: %s", HELPERS_HLunaServiceMessage(reply));
+    jdomparser_ref parser = NULL;
+    jvalue_ref parsed = NULL;
+    jvalue_ref message = NULL;
+    SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "lifecycleEvent(v2): %s", HELPERS_HLunaServiceMessage(reply));
+    if ((parsed = SDL_webOSJsonParse(HELPERS_HLunaServiceMessage(reply), &parser, 1)) == NULL) {
+        return 0;
+    }
+    if (PBNJSON_jobject_get_exists(parsed, J_CSTR_TO_BUF("event"), &message)) {
+        raw_buffer message_buf = PBNJSON_jstring_get_fast(message);
+        if (message_buf.m_str) {
+            if (SDL_strncmp(message_buf.m_str, "relaunch", message_buf.m_len) == 0) {
+                SDL_VideoDevice *device = SDL_GetVideoDevice();
+                if (device->windows) {
+                    SDL_RaiseWindow(device->windows);
+                }
+            } else if (SDL_strncmp(message_buf.m_str, "close", message_buf.m_len) == 0) {
+                SDL_SendQuit();
+            }
+        }
+    }
+    PBNJSON_jdomparser_release(&parser);
     return 1;
 }
 

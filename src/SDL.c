@@ -494,9 +494,6 @@ Uint32 SDL_WasInit(Uint32 flags)
 void SDL_Quit(void)
 {
     SDL_bInMainQuit = SDL_TRUE;
-#if __WEBOS__
-    SDL_webOSAppQuited();
-#endif
 
     /* Quit all subsystems */
 #if SDL_VIDEO_DRIVER_WINDOWS
