@@ -40,25 +40,10 @@
  */
 static inline jobject_key_value PBNJSON_jkeyval(jvalue_ref key, jvalue_ref value)
 {
-	assert(key != NULL);
-	assert(PBNJSON_jis_string(key));
-	return (jobject_key_value){ (key), (value) };
+    assert(key != NULL);
+    assert(PBNJSON_jis_string(key));
+    return (jobject_key_value){ (key), (value) };
 }
-
-/**
- * @brief Convenience method to determines whether or not the object contains a key.
- *
- * Convenience method to determines whether or not the object contains a key.
- *
- * @param obj json object to look in
- * @param key json string with key name
- * @return True if obj is an object and it has a key/value pair matching the specified key.
- */
-static inline int PBNJSON_jobject_containskey(jvalue_ref obj, raw_buffer key)
-{
-    return PBNJSON_jobject_get_exists(obj, key, NULL);
-}
-
 
 /**
  * @brief Convenience inline function that casts the C-string constant/literal to a raw_buffer
@@ -71,7 +56,7 @@ static inline int PBNJSON_jobject_containskey(jvalue_ref obj, raw_buffer key)
  */
 static inline raw_buffer PBNJSON_j_cstr_to_buffer(const char *cstring)
 {
-        return ((raw_buffer) { cstring, strlen(cstring) } );
+    return ((raw_buffer){ cstring, strlen(cstring) });
 }
 
 /**
@@ -84,7 +69,7 @@ static inline raw_buffer PBNJSON_j_cstr_to_buffer(const char *cstring)
  */
 static inline jvalue_ref PBNJSON_j_cstr_to_jval(const char *cstring)
 {
-        return PBNJSON_jstring_create_nocopy(PBNJSON_j_cstr_to_buffer(cstring));
+    return PBNJSON_jstring_create_nocopy(PBNJSON_j_cstr_to_buffer(cstring));
 }
 
 /**
@@ -94,17 +79,17 @@ static inline jvalue_ref PBNJSON_j_cstr_to_jval(const char *cstring)
  *
  * @param string pointer to a string
  * @param length length of the string
-  */
+ */
 static inline raw_buffer PBNJSON_j_str_to_buffer(const char *string, size_t length)
 {
-	return ((raw_buffer){ (string), (length) });
+    return ((raw_buffer){ (string), (length) });
 }
 
 /**
  * @brief Last argument in method jobject_create_var
  *
-  */
-#define J_END_OBJ_DECL ((jobject_key_value) {NULL, NULL})
+ */
+#define J_END_OBJ_DECL ((jobject_key_value){ NULL, NULL })
 
 /**
  * @brief Creat a buffer from a C-string literal or char array.
@@ -130,6 +115,20 @@ static inline raw_buffer PBNJSON_j_str_to_buffer(const char *string, size_t leng
  * @see pj_cstr_to_jval
  */
 #define J_CSTR_TO_JVAL(string) PBNJSON_jstring_create_nocopy(PBNJSON_j_str_to_buffer(string, sizeof(string) - 1))
+
+/**
+ * @brief Convenience method to determines whether or not the object contains a key.
+ *
+ * Convenience method to determines whether or not the object contains a key.
+ *
+ * @param obj json object to look in
+ * @param key json string with key name
+ * @return True if obj is an object and it has a key/value pair matching the specified key.
+ */
+static inline int PBNJSON_jobject_containskey(jvalue_ref obj, raw_buffer key)
+{
+    return PBNJSON_jobject_get_exists(obj, key, NULL);
+}
 
 #endif // SDL_webos_pbnjson_inlines_h_
 

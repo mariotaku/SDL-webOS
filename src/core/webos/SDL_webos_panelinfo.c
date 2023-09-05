@@ -58,7 +58,7 @@ SDL_bool SDL_webOSGetRefreshRate(int *rate) {
             if (PBNJSON_jis_object(configs)) {
                 const char *keys[] = {"tv.hw.SoCOutputFrameRate", "tv.hw.supportFrc", NULL};
                 for (int i = 0; keys[i] != NULL && !result; i++) {
-                    jvalue_ref config = PBNJSON_jobject_get(configs, PBNJSON_j_str_to_buffer(keys[i], strlen(keys[i])));
+                    jvalue_ref config = PBNJSON_jobject_get(configs, PBNJSON_j_cstr_to_buffer(keys[i]));
                     switch (i) {
                         case 0: {
                             char value[16];

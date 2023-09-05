@@ -32,4 +32,18 @@ jvalue_ref SDL_webOSJsonParse(const char *json, jdomparser_ref *parser, SDL_bool
     return result;
 }
 
+jvalue_ref PBNJSON_jobject_get_nested(jvalue_ref obj, ...) {
+    va_list iter;
+    const char *key;
+    va_start(iter, obj);
+    while ((key = va_arg(iter, const char *)) != NULL) {
+        if (!PBNJSON_jobject_get_exists(obj, PBNJSON_j_cstr_to_buffer(key), &obj)) {
+            obj = PBNJSON_jinvalid();
+            break;
+        }
+    }
+    va_end(iter);
+    return obj;
+}
+
 #endif // __WEBOS__
