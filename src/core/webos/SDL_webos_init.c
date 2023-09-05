@@ -17,11 +17,11 @@ static LSHandle *s_LSHandle = NULL;
 static int getNativeLifeCycleInterfaceVersion(const char *appId);
 
 static SDL_bool registerApp(const char *appId, int interfaceVersion);
-static int lifecycleCallbackVersion1(LSHandle *sh, LSMessage *reply, void *ctx);
-static int lifecycleCallbackVersion2(LSHandle *sh, LSMessage *reply, void *ctx);
+static int lifecycleCallbackVersion1(LSHandle *sh, LSMessage *reply, HContext *ctx);
+static int lifecycleCallbackVersion2(LSHandle *sh, LSMessage *reply, HContext *ctx);
 
 static SDL_bool registerScreenSaverRequest(const char *appId);
-static int screenSaverRequestCallback(LSHandle *sh, LSMessage *reply, void *ctx);
+static int screenSaverRequestCallback(LSHandle *sh, LSMessage *reply, HContext *ctx);
 
 static HContext s_AppLifecycleContext = {
     .multiple = 1,
@@ -146,12 +146,12 @@ static SDL_bool registerApp(const char *appId, int interfaceVersion)
     return HELPERS_HLunaServiceCall(uri, payload, &s_AppLifecycleContext) == 0;
 }
 
-static int lifecycleCallbackVersion1(LSHandle *sh, LSMessage *reply, void *ctx)
+static int lifecycleCallbackVersion1(LSHandle *sh, LSMessage *reply, HContext *ctx)
 {
     SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Lifecycle callback: %s", HELPERS_HLunaServiceMessage(reply));
     return 0;
 }
-static int lifecycleCallbackVersion2(LSHandle *sh, LSMessage *reply, void *ctx)
+static int lifecycleCallbackVersion2(LSHandle *sh, LSMessage *reply, HContext *ctx)
 {
     SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Lifecycle callback: %s", HELPERS_HLunaServiceMessage(reply));
     return 0;
@@ -179,7 +179,7 @@ static SDL_bool registerScreenSaverRequest(const char *appId)
     return result;
 }
 
-static int screenSaverRequestCallback(LSHandle *sh, LSMessage *reply, void *ctx)
+static int screenSaverRequestCallback(LSHandle *sh, LSMessage *reply, HContext *ctx)
 {
     SDL_VideoDevice *device;
     const char *message;
@@ -209,7 +209,7 @@ static int screenSaverRequestCallback(LSHandle *sh, LSMessage *reply, void *ctx)
         return 0;
     }
     response = PBNJSON_jobject_create_var(
-        PBNJSON_jkeyval(J_CSTR_TO_JVAL("clientName"), PBNJSON_j_cstr_to_jval((const char *)ctx)),
+        PBNJSON_jkeyval(J_CSTR_TO_JVAL("clientName"), PBNJSON_j_cstr_to_jval((const char *)ctx->userdata)),
         PBNJSON_jkeyval(J_CSTR_TO_JVAL("ack"), PBNJSON_jboolean_create(0)),
         PBNJSON_jkeyval(J_CSTR_TO_JVAL("timestamp"), timestamp),
         NULL);

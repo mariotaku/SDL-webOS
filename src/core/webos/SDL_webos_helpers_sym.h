@@ -26,10 +26,11 @@
 typedef struct LSHandle LSHandle;
 typedef struct LSMessage LSMessage;
 typedef unsigned long LSMessageToken;
+typedef struct HContext HContext;
 
-typedef int (*LSFilterFunc) (LSHandle *sh, LSMessage *reply, void *ctx);
+typedef int (*LSFilterFunc) (LSHandle *sh, LSMessage *reply, struct HContext *ctx);
 
-typedef struct HContext {
+struct HContext {
     /**
      * @brief Callback function called on incoming message.
      */
@@ -45,7 +46,7 @@ typedef struct HContext {
      */
     int pub;
     LSMessageToken ret_token;
-} HContext;
+};
 
 #endif // SDL_webos_helpers_types_
 

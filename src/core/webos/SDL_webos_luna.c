@@ -18,7 +18,7 @@ struct HContextSync
     char **output;
 };
 
-static int callback(LSHandle *sh, LSMessage *reply, void *ctx);
+static int callback(LSHandle *sh, LSMessage *reply, HContext *ctx);
 
 SDL_bool SDL_webOSLunaServiceCallSync(const char *uri, const char *payload, int pub, char **output)
 {
@@ -54,7 +54,7 @@ SDL_bool SDL_webOSLunaServiceCallSync(const char *uri, const char *payload, int 
     return SDL_TRUE;
 }
 
-static int callback(LSHandle *sh, LSMessage *reply, void *ctx)
+static int callback(LSHandle *sh, LSMessage *reply, HContext *ctx)
 {
     struct HContextSync *context = (struct HContextSync *)ctx;
     (void)sh;
