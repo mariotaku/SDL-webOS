@@ -19,10 +19,10 @@ char WaylandWebOS_GetCursorSize()
         return 'M';
     }
     if ((parsed = SDL_webOSJsonParse(response, &parser, 1))) {
-        jvalue_ref settings = PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("settings"));
-        if (PBNJSON_jis_object(settings)) {
-            jvalue_ref pointerSize = PBNJSON_jobject_get(settings, J_CSTR_TO_BUF("pointerSize"));
-            if (PBNJSON_jis_string(pointerSize)) {
+        jvalue_ref settings;
+        if (PBNJSON_jobject_get_exists(parsed, J_CSTR_TO_BUF("settings"), &settings)) {
+            jvalue_ref pointerSize;
+            if (PBNJSON_jobject_get_exists(settings, J_CSTR_TO_BUF("pointerSize"), &pointerSize)) {
                 raw_buffer sizeStr = PBNJSON_jstring_get_fast(pointerSize);
                 if (SDL_strncmp(sizeStr.m_str, "small", sizeStr.m_len) == 0) {
                     size = 'S';

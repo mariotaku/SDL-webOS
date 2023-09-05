@@ -116,9 +116,8 @@ int getNativeLifeCycleInterfaceVersion(const char *appId)
         return SDL_SetError("Failed to parse output of luna://com.webos.applicationManager/getAppInfo");
     }
 
-    if (appInfo = PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("appInfo")), PBNJSON_jis_object(appInfo)) {
-        versionValue = PBNJSON_jobject_get(appInfo, J_CSTR_TO_BUF("nativeLifeCycleInterfaceVersion"));
-        if (PBNJSON_jis_number(versionValue)) {
+    if (PBNJSON_jobject_get_exists(parsed, J_CSTR_TO_BUF("appInfo"), &appInfo)) {
+        if (PBNJSON_jobject_get_exists(appInfo, J_CSTR_TO_BUF("nativeLifeCycleInterfaceVersion"), &versionValue)) {
             PBNJSON_jnumber_get_i32(versionValue, &version);
         }
     }
@@ -148,7 +147,24 @@ static SDL_bool registerApp(const char *appId, int interfaceVersion)
 
 static int lifecycleCallbackVersion1(LSHandle *sh, LSMessage *reply, HContext *ctx)
 {
+    jdomparser_ref parser = NULL;
+    jvalue_ref parsed = NULL;
+    jvalue_ref message = NULL;
     SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Lifecycle callback: %s", HELPERS_HLunaServiceMessage(reply));
+    if ((parsed = SDL_webOSJsonParse(HELPERS_HLunaServiceMessage(reply), &parser, 1)) == NULL) {
+        return 0;
+    }
+    if (PBNJSON_jobject_get_exists(parsed, J_CSTR_TO_BUF("message"), &message)) {
+        raw_buffer message_buf = PBNJSON_jstring_get_fast(message);
+        if (message_buf.m_str) {
+            if (SDL_strncmp(message_buf.m_str, "relaunch", message_buf.m_len) == 0) {
+                SDL_VideoDevice *device = SDL_GetVideoDevice();
+                if (device->windows) {
+                    SDL_RaiseWindow(device->windows);
+                }
+            }
+        }
+    }
     return 1;
 }
 static int lifecycleCallbackVersion2(LSHandle *sh, LSMessage *reply, HContext *ctx)
@@ -197,13 +213,12 @@ static int screenSaverRequestCallback(LSHandle *sh, LSMessage *reply, HContext *
     }
 
     message = HELPERS_HLunaServiceMessage(reply);
+    SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Screen saver request: %s", message);
     if ((parsed = SDL_webOSJsonParse(message, &parser, 1)) == NULL) {
         return 0;
     }
 
-    timestamp = PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("timestamp"));
-
-    if (PBNJSON_jis_null(timestamp)) {
+    if (!PBNJSON_jobject_get_exists(parsed, J_CSTR_TO_BUF("timestamp"), &timestamp)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM, "Skip invalid screensaver request (no timestamp)");
         PBNJSON_jdomparser_release(&parser);
         return 1;
@@ -214,8 +229,8 @@ static int screenSaverRequestCallback(LSHandle *sh, LSMessage *reply, HContext *
         PBNJSON_jkeyval(J_CSTR_TO_JVAL("timestamp"), timestamp),
         NULL);
 
-    SDL_webOSLunaServiceCallSync("luna://com.webos.service.tvpower/power/responseScreenSaverRequest",
-                             PBNJSON_jvalue_stringify(response), 1, NULL);
+    SDL_webOSLunaServiceJustCall("luna://com.webos.service.tvpower/power/responseScreenSaverRequest",
+                                 PBNJSON_jvalue_stringify(response), 1);
     PBNJSON_j_release(&response);
     PBNJSON_jdomparser_release(&parser);
     return 1;

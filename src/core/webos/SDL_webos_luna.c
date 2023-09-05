@@ -18,7 +18,18 @@ struct HContextSync
     char **output;
 };
 
-static int callback(LSHandle *sh, LSMessage *reply, HContext *ctx);
+static int syncCallCallback(LSHandle *sh, LSMessage *reply, HContext *ctx);
+
+static int justCallCallback(LSHandle *sh, LSMessage *reply, HContext *ctx);
+
+extern SDL_bool SDL_webOSLunaServiceJustCall(const char* uri, const char* payload, int pub)
+{
+    HContext *response_context = SDL_calloc(1, sizeof(HContext));
+    response_context->multiple = 0;
+    response_context->pub = pub;
+    response_context->callback = justCallCallback;
+    return HELPERS_HLunaServiceCall(uri, payload, response_context) == 0;
+}
 
 SDL_bool SDL_webOSLunaServiceCallSync(const char *uri, const char *payload, int pub, char **output)
 {
@@ -26,7 +37,7 @@ SDL_bool SDL_webOSLunaServiceCallSync(const char *uri, const char *payload, int 
         .base.ctx = {
             .multiple = 0,
             .pub = pub ? 1 : 0,
-            .callback = callback,
+            .callback = syncCallCallback,
         }
     };
     if (!HELPERS_HLunaServiceCall) {
@@ -54,7 +65,7 @@ SDL_bool SDL_webOSLunaServiceCallSync(const char *uri, const char *payload, int 
     return SDL_TRUE;
 }
 
-static int callback(LSHandle *sh, LSMessage *reply, HContext *ctx)
+static int syncCallCallback(LSHandle *sh, LSMessage *reply, HContext *ctx)
 {
     struct HContextSync *context = (struct HContextSync *)ctx;
     (void)sh;
@@ -66,6 +77,12 @@ static int callback(LSHandle *sh, LSMessage *reply, HContext *ctx)
     SDL_CondSignal(context->cond);
     SDL_UnlockMutex(context->mutex);
     return 0;
+}
+
+static int justCallCallback(LSHandle *sh, LSMessage *reply, HContext *ctx)
+{
+    SDL_free(ctx);
+    return 1;
 }
 
 #endif // __WEBOS__
