@@ -2461,6 +2461,18 @@ extern "C" {
  * \brief A variable that decides whether to send Luna calls to register the app automatically.
  */
 #define SDL_HINT_WEBOS_REGISTER_APP "SDL_HINT_WEBOS_REGISTER_APP"
+/**
+ * \brief A variable that decides the window class.
+ */
+#define SDL_HINT_WEBOS_WINDOW_CLASS "SDL_HINT_WEBOS_WINDOW_CLASS"
+/**
+ * \brief A variable that decides update frequency of the cursor in second.
+ */
+#define SDL_HINT_WEBOS_CURSOR_FREQUENCY "SDL_HINT_WEBOS_CURSOR_FREQUENCY"
+/**
+ * \brief A variable that decides whether to disable cursor calibration.
+ */
+#define SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE "SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE"
 
 /**
  *  \brief  An enumeration of hint priorities

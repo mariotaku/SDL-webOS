@@ -103,6 +103,7 @@ void WaylandWebOS_VideoCleanUp(_THIS)
 int WaylandWebOS_SetupSurface(_THIS, SDL_WindowData *data)
 {
     const char *appId;
+    const char* hintValue;
     appId = SDL_getenv("APPID");
     if (appId == NULL) {
         return SDL_SetError("APPID environment variable is not set");
@@ -115,9 +116,20 @@ int WaylandWebOS_SetupSurface(_THIS, SDL_WindowData *data)
     if (SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_EXIT, SDL_FALSE)) {
         wl_webos_shell_surface_set_property(data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_KEYS_EXIT", "true");
     }
-    if (SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_FORCE_STRETCH, SDL_TRUE)) {
-        wl_webos_shell_surface_set_property(data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_FORCESTRETCH", "true");
+    if(SDL_GetHintBoolean(SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE, SDL_FALSE)) {
+        wl_webos_shell_surface_set_property(data->shell_surface.webos, "restore_cursor_position", "true");
     }
+    if ((hintValue = SDL_GetHint(SDL_HINT_WEBOS_CURSOR_FREQUENCY)) != NULL) {
+        if (SDL_strtol(hintValue, NULL, 10) > 0) {
+            wl_webos_shell_surface_set_property(data->shell_surface.webos, "cursor_fps", hintValue);
+        }
+    }
+    if ((hintValue = SDL_GetHint(SDL_HINT_WEBOS_WINDOW_CLASS)) != NULL) {
+        if (SDL_strncmp(hintValue, "1", 1) == 0) {
+            wl_webos_shell_surface_set_property(data->shell_surface.webos, "_WEBOS_WINDOW_CLASS", hintValue);
+        }
+    }
+    wl_webos_shell_surface_set_property(data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_FORCESTRETCH", "true");
     return 0;
 }
 
