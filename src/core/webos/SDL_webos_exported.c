@@ -1,25 +1,7 @@
 #include "../../SDL_internal.h"
 
-#ifdef __WEBOS__
-
 #include "SDL_system.h"
-#include "SDL_webos_json.h"
-#include "SDL_webos_luna.h"
 #include "../../video/SDL_sysvideo.h"
-#include "../../events/SDL_mouse_c.h"
-
-SDL_bool SDL_webOSCursorVisibility(SDL_bool visible) {
-    SDL_Mouse *mouse = SDL_GetMouse();
-    if (mouse == NULL) {
-        SDL_SetError("Failed to set cursor visibility: No mouse");
-        return SDL_FALSE;
-    }
-    if (mouse->WebOSSetCursorVisibility == NULL) {
-        SDL_SetError("Failed to set cursor visibility: Mouse does not support cursor visibility");
-        return SDL_FALSE;
-    }
-    return mouse->WebOSSetCursorVisibility(visible);
-}
 
 const char *SDL_webOSCreateExportedWindow(SDL_webOSExportedWindowType type) {
     SDL_VideoDevice *dev = SDL_GetVideoDevice();
@@ -90,5 +72,3 @@ void SDL_webOSDestroyExportedWindow(const char *windowId) {
     }
     return dev->WebOSDestroyExportedWindow(dev, windowId);
 }
-
-#endif // __WEBOS__

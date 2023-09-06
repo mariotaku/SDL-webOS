@@ -78,10 +78,10 @@ typedef struct
     /* Get absolute mouse coordinates. (x) and (y) are never NULL and set to zero before call. */
     Uint32 (*GetGlobalMouseState)(int *x, int *y);
 
-#if SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+#if __WEBOS__
     /* Set mouse cursor visibility */
     SDL_bool (*WebOSSetCursorVisibility)(SDL_bool visible);
-#endif
+#endif /* __WEBOS__ */
 
     /* Data common to all mice */
     SDL_MouseID mouseID;
