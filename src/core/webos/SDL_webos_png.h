@@ -20,30 +20,18 @@
 */
 #include "../../SDL_internal.h"
 
-#ifndef SDL_webos_libs_h_
-#define SDL_webos_libs_h_
-
+#ifndef SDL_webos_png_h_
+#define SDL_webos_png_h_
+#include "SDL_stdinc.h"
+#include "SDL_rwops.h"
 #include "SDL_surface.h"
 
-extern int SDL_webOSLoadLibraries();
+extern int IMG_InitPNG();
 
-extern void SDL_webOSUnloadLibraries();
+extern void IMG_QuitPNG();
 
-#define SDL_HELPERS_SYM(rc, fn, params)         \
-    typedef rc(*SDL_DYNHELPERSFN_##fn) params;  \
-    extern SDL_DYNHELPERSFN_##fn HELPERS_##fn;
-#define SDL_HELPERS_SYM_OPT(rc, fn, params)     \
-    typedef rc(*SDL_DYNHELPERSFN_##fn) params;  \
-    extern SDL_DYNHELPERSFN_##fn HELPERS_##fn;
-#include "SDL_webos_helpers_sym.h"
+extern SDL_Surface *IMG_LoadPNG_RW(SDL_RWops *src);
 
-
-#define SDL_PBNJSON_SYM(rc, fn, params)         \
-    typedef rc(*SDL_DYNPBNJSONFN_##fn) params;  \
-    extern SDL_DYNPBNJSONFN_##fn PBNJSON_##fn;
-#include "SDL_webos_pbnjson_sym.h"
-#include "SDL_webos_pbnjson_inlines.h"
-
-#endif // SDL_webos_libs_h_
+#endif // SDL_webos_png_h_
 
 /* vi: set ts=4 sw=4 expandtab: */

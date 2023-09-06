@@ -482,7 +482,7 @@ static Uint32 hidraw_presence_flags()
         return 0;
     }
 
-    dev_count = scandir("/dev", &dev_list, is_hidraw, NULL);
+    dev_count = scandir("/dev", &dev_list, is_hidraw, alphasort);
 
     if (dev_count < 0) {
         close(dev_dir_fd);
@@ -566,7 +566,7 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
         return NULL;
     }
 
-    dev_count = scandir("/dev", &dev_list, is_hidraw, NULL);
+    dev_count = scandir("/dev", &dev_list, is_hidraw, alphasort);
 
 	/* For each item, see if it matches the vid/pid, and if so
 	   create a udev_device record for it */

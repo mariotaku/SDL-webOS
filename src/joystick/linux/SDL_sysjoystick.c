@@ -135,7 +135,10 @@ typedef enum
 {
     ENUMERATION_UNSET,
     ENUMERATION_LIBUDEV,
-    ENUMERATION_FALLBACK
+    ENUMERATION_FALLBACK,
+#if __WEBOS__
+    ENUMERATION_POLLING,
+#endif
 } EnumerationMethod;
 
 static EnumerationMethod enumeration_method = ENUMERATION_UNSET;
@@ -787,8 +790,11 @@ static int LINUX_JoystickInit(void)
         } else if (SDL_DetectSandbox() != SDL_SANDBOX_NONE) {
             SDL_LogDebug(SDL_LOG_CATEGORY_INPUT,
                          "Container detected, disabling udev integration");
+#if __WEBOS__
+            enumeration_method = ENUMERATION_POLLING;
+#else
             enumeration_method = ENUMERATION_FALLBACK;
-
+#endif
         } else {
             SDL_LogDebug(SDL_LOG_CATEGORY_INPUT,
                          "Using udev for joystick device discovery");
@@ -811,7 +817,7 @@ static int LINUX_JoystickInit(void)
         SDL_UDEV_Scan();
     } else
 #endif
-    {
+    if (enumeration_method == ENUMERATION_FALLBACK) {
 #if defined(HAVE_INOTIFY)
         inotify_fd = SDL_inotify_init1();
 

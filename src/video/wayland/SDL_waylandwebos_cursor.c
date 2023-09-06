@@ -6,6 +6,7 @@
 #include "../../core/webos/SDL_webos_libs.h"
 #include "../../core/webos/SDL_webos_luna.h"
 #include "../../core/webos/SDL_webos_json.h"
+#include "../../core/webos/SDL_webos_png.h"
 
 char WaylandWebOS_GetCursorSize()
 {
@@ -39,14 +40,23 @@ char WaylandWebOS_GetCursorSize()
 
 SDL_Surface *WaylandWebOS_LoadCursorSurface(const char *type, const char *state)
 {
+    SDL_RWops *rw = NULL;
     SDL_Surface *surface = NULL;
     char path[1024];
     char size = WaylandWebOS_GetCursorSize();
     snprintf(path, sizeof(path), "/usr/share/im/cursorType%ssz%cst%s.png", type, size, state);
-    surface = IMG_IMG_Load(path);
-    if (!surface) {
+    rw = SDL_RWFromFile(path, "rb");
+    if (!rw) {
         snprintf(path, sizeof(path), "/usr/share/im/fhd/cursorType%ssz%cst%s.png", type, size, state);
-        surface = IMG_IMG_Load(path);
+        rw = SDL_RWFromFile(path, "rb");
+    }
+    if (rw == NULL) {
+        return NULL;
+    }
+    surface = IMG_LoadPNG_RW(rw);
+    if (surface == NULL) {
+        SDL_RWclose(rw);
+        return NULL;
     }
     return surface;
 }
