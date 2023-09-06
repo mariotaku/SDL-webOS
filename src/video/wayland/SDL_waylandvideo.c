@@ -39,6 +39,7 @@
 #include "SDL_waylandvulkan.h"
 #include "SDL_waylandwebos.h"
 #include "SDL_waylandwebos_foreign.h"
+#include "SDL_waylandwebos_osk.h"
 #include "SDL_hints.h"
 
 #include <sys/types.h>
@@ -283,7 +284,14 @@ static SDL_VideoDevice *Wayland_CreateDevice(void)
     device->DestroyWindow = Wayland_DestroyWindow;
     device->SetWindowHitTest = Wayland_SetWindowHitTest;
     device->FlashWindow = Wayland_FlashWindow;
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    device->HasScreenKeyboardSupport = WaylandWebOS_HasScreenKeyboardSupport;
+    device->ShowScreenKeyboard = WaylandWebOS_ShowScreenKeyboard;
+    device->HideScreenKeyboard = WaylandWebOS_HideScreenKeyboard;
+    device->IsScreenKeyboardShown = WaylandWebOS_IsScreenKeyboardShown;
+#else
     device->HasScreenKeyboardSupport = Wayland_HasScreenKeyboardSupport;
+#endif
 
     device->SetClipboardText = Wayland_SetClipboardText;
     device->GetClipboardText = Wayland_GetClipboardText;

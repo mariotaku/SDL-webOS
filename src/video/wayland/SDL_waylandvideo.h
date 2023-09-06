@@ -106,6 +106,7 @@ typedef struct
         int count;
         struct webos_foreign_window *windows;
     } *webos_foreign_table;
+    struct webos_osk_data *webos_screen_keyboard_data;
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
     char *classname;
