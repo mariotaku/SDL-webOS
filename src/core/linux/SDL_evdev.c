@@ -131,10 +131,6 @@ static int SDL_EVDEV_device_added(const char *dev_path, int udev_class);
 static void SDL_EVDEV_udev_callback(SDL_UDEV_deviceevent udev_event, int udev_class, const char *dev_path);
 #endif /* SDL_USE_LIBUDEV */
 
-#if __WEBOS__
-extern void SDL_IgnoreInotifyOpen(SDL_bool ignore);
-#endif
-
 static Uint8 EVDEV_MouseButtons[] = {
     SDL_BUTTON_LEFT,   /*  BTN_LEFT        0x110 */
     SDL_BUTTON_RIGHT,  /*  BTN_RIGHT       0x111 */
@@ -804,13 +800,7 @@ static int SDL_EVDEV_device_added(const char *dev_path, int udev_class)
         return SDL_OutOfMemory();
     }
 
-#if __WEBOS__
-    SDL_IgnoreInotifyOpen(SDL_TRUE);
-#endif
     item->fd = open(dev_path, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-#if __WEBOS__
-    SDL_IgnoreInotifyOpen(SDL_FALSE);
-#endif
     if (item->fd < 0) {
         SDL_free(item);
         return SDL_SetError("Unable to open %s", dev_path);

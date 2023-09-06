@@ -45,6 +45,7 @@
 #include <sys/utsname.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <dirent.h>
 
 /* Linux */
 #include <linux/hidraw.h>
@@ -455,6 +456,66 @@ end:
 	return ret;
 }
 
+static int is_hidraw(const struct dirent *dir)
+{
+    return dir->d_type == DT_CHR && strncmp(dir->d_name, "hidraw", 6) == 0;
+}
+
+static SDL_bool is_char_device_present(dev_t devnum)
+{
+    char path[256];
+    struct stat st;
+    snprintf(path, 256, "/sys/dev/char/%u:%u", major(devnum), minor(devnum));
+    return stat(path, &st) == 0;
+}
+
+static Uint32 hidraw_presence_flags()
+{
+    Uint32 flags = 0;
+    struct dirent **dev_list;
+    int dev_dir_fd;
+    int dev_count;
+
+    dev_dir_fd = open("/dev", O_RDONLY | O_DIRECTORY);
+
+    if (dev_dir_fd < 0) {
+        return 0;
+    }
+
+    dev_count = scandir("/dev", &dev_list, is_hidraw, NULL);
+
+    if (dev_count < 0) {
+        close(dev_dir_fd);
+        return 0;
+    }
+
+    for (int dev_idx = 0; dev_idx < dev_count; dev_idx++) {
+        struct stat dev_st;
+        int ret;
+        int dev_num;
+        char *endptr = NULL;
+        ret = fstatat(dev_dir_fd, dev_list[dev_idx]->d_name, &dev_st, 0);
+        if (ret != 0 || !S_ISCHR(dev_st.st_mode)) {
+            free(dev_list[dev_idx]); /* SHOULD NOT be freed with SDL_free() */
+            continue;
+        }
+        dev_num = strtol(dev_list[dev_idx]->d_name + 6, &endptr, 10);
+        if (endptr == NULL || *endptr != '\0') {
+            free(dev_list[dev_idx]); /* SHOULD NOT be freed with SDL_free() */
+            continue;
+        }
+        if (is_char_device_present(dev_st.st_rdev)) {
+            flags |= 1 << dev_num;
+        }
+        free(dev_list[dev_idx]); /* SHOULD NOT be freed with SDL_free() */
+    }
+    free(dev_list); /* SHOULD NOT be freed with SDL_free() */
+
+    close(dev_dir_fd);
+
+    return flags;
+}
+
 int HID_API_EXPORT hid_init(void)
 {
 	const char *locale;
@@ -479,6 +540,10 @@ int HID_API_EXPORT hid_exit(void)
 struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, unsigned short product_id)
 {
 	struct udev *udev;
+    struct dirent **dev_list;
+
+    int dev_dir_fd;
+    int dev_count;
 
 	struct hid_device_info *root = NULL; /* return object */
 	struct hid_device_info *cur_dev = NULL;
@@ -494,10 +559,18 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 		return NULL;
 	}
 
+    dev_dir_fd = open("/dev", O_RDONLY | O_DIRECTORY);
+
+    if (dev_dir_fd < 0) {
+        udev_unref(udev);
+        return NULL;
+    }
+
+    dev_count = scandir("/dev", &dev_list, is_hidraw, NULL);
+
 	/* For each item, see if it matches the vid/pid, and if so
 	   create a udev_device record for it */
-	for (int dev_idx = 0; ; dev_idx++) {
-        char dev_path[64];
+	for (int dev_idx = 0; dev_idx < dev_count; dev_idx++) {
         struct stat dev_st;
 		const char *str;
 		struct udev_device *raw_dev; /* The device's hidraw udev node. */
@@ -511,9 +584,9 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 		unsigned bus_type;
 		int result;
 
-		snprintf(dev_path, 64, "/dev/hidraw%d", dev_idx);
-		if (stat(dev_path, &dev_st) != 0) {
-			break;
+		if (fstatat(dev_dir_fd, dev_list[dev_idx]->d_name, &dev_st, 0) != 0) {
+            free(dev_list[dev_idx]); /* SHOULD NOT be freed with SDL_free() */
+            continue;
 		}
 		raw_dev = udev_device_new_from_devnum(udev, 'c', dev_st.st_rdev);
 
@@ -545,7 +618,7 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 			goto next;
 		}
 
-		if (access(dev_path, R_OK|W_OK) != 0) {
+		if (faccessat(dev_dir_fd, dev_list[dev_idx]->d_name, R_OK|W_OK, 0) != 0) {
 			/* We can't open this device, ignore it */
 			goto next;
 		}
@@ -578,7 +651,8 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 
 			/* Fill out the record */
 			cur_dev->next = NULL;
-			cur_dev->path = strdup(dev_path);
+			cur_dev->path = malloc(64);
+            snprintf(cur_dev->path, 64, "/dev/%.40s", dev_list[dev_idx]->d_name);
 
 			/* VID/PID */
 			cur_dev->vendor_id = dev_vid;
@@ -661,11 +735,16 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 	next:
 		free(serial_number_utf8);
 		free(product_name_utf8);
+        free(dev_list[dev_idx]); /* SHOULD NOT be freed with SDL_free() */
 		udev_device_unref(raw_dev);
 		/* hid_dev, usb_dev and intf_dev don't need to be (and can't be)
 		   unref()d.  It will cause a double-free() error.  I'm not
 		   sure why.  */
 	}
+    /* Free the device list */
+    close(dev_dir_fd);
+    free(dev_list); /* SHOULD NOT be freed with SDL_free() */
+
 	/* Free the enumerator and udev objects. */
 	udev_unref(udev);
 
@@ -731,7 +810,6 @@ hid_device * HID_API_EXPORT hid_open_path(const char *path, int bExclusive)
 
 	dev = new_hid_device();
 
-    SDL_IgnoreInotifyOpen(SDL_TRUE);
 	/* OPEN HERE */
 	for (attempt = 1; attempt <= MAX_ATTEMPTS; ++attempt) {
 		dev->device_handle = open(path, O_RDWR | O_CLOEXEC);
@@ -742,7 +820,6 @@ hid_device * HID_API_EXPORT hid_open_path(const char *path, int bExclusive)
 		}
 		break;
 	}
-    SDL_IgnoreInotifyOpen(SDL_FALSE);
 
 	/* If we have a good handle, return it. */
 	if (dev->device_handle >= 0) {

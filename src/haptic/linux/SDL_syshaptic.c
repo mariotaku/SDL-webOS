@@ -51,10 +51,6 @@ static int MaybeRemoveDevice(const char *path);
 static void haptic_udev_callback(SDL_UDEV_deviceevent udev_type, int udev_class, const char *devpath);
 #endif /* SDL_USE_LIBUDEV */
 
-#if __WEBOS__
-extern void SDL_IgnoreInotifyOpen(SDL_bool ignore);
-#endif
-
 /*
  * List of available haptic devices.
  */
@@ -253,13 +249,7 @@ static int MaybeAddDevice(const char *path)
     }
 
     /* try to open */
-#if __WEBOS__
-    SDL_IgnoreInotifyOpen(SDL_TRUE);
-#endif
     fd = open(path, O_RDWR | O_CLOEXEC, 0);
-#if __WEBOS__
-    SDL_IgnoreInotifyOpen(SDL_FALSE);
-#endif
     if (fd < 0) {
         return -1;
     }
@@ -370,13 +360,7 @@ const char *SDL_SYS_HapticName(int index)
     item = HapticByDevIndex(index);
     /* Open the haptic device. */
     name = NULL;
-#if __WEBOS__
-    SDL_IgnoreInotifyOpen(SDL_TRUE);
-#endif
     fd = open(item->fname, O_RDONLY | O_CLOEXEC, 0);
-#if __WEBOS__
-    SDL_IgnoreInotifyOpen(SDL_FALSE);
-#endif
 
     if (fd >= 0) {
 
@@ -450,13 +434,7 @@ int SDL_SYS_HapticOpen(SDL_Haptic *haptic)
 
     item = HapticByDevIndex(haptic->index);
     /* Open the character device */
-#if __WEBOS__
-    SDL_IgnoreInotifyOpen(SDL_TRUE);
-#endif
     fd = open(item->fname, O_RDWR | O_CLOEXEC, 0);
-#if __WEBOS__
-    SDL_IgnoreInotifyOpen(SDL_FALSE);
-#endif
     if (fd < 0) {
         return SDL_SetError("Haptic: Unable to open %s: %s",
                             item->fname, strerror(errno));
@@ -484,13 +462,7 @@ int SDL_SYS_HapticMouse(void)
 
     for (item = SDL_hapticlist; item; item = item->next) {
         /* Open the device. */
-#if __WEBOS__
-        SDL_IgnoreInotifyOpen(SDL_TRUE);
-#endif
         fd = open(item->fname, O_RDWR | O_CLOEXEC, 0);
-#if __WEBOS__
-        SDL_IgnoreInotifyOpen(SDL_FALSE);
-#endif
         if (fd < 0) {
             return SDL_SetError("Haptic: Unable to open %s: %s",
                                 item->fname, strerror(errno));
@@ -577,13 +549,7 @@ int SDL_SYS_HapticOpenFromJoystick(SDL_Haptic *haptic, SDL_Joystick *joystick)
         return SDL_SetError("Haptic: Joystick doesn't have Haptic capabilities");
     }
 
-#if __WEBOS__
-    SDL_IgnoreInotifyOpen(SDL_TRUE);
-#endif
     fd = open(joystick->hwdata->fname, O_RDWR | O_CLOEXEC, 0);
-#if __WEBOS__
-    SDL_IgnoreInotifyOpen(SDL_FALSE);
-#endif
     if (fd < 0) {
         return SDL_SetError("Haptic: Unable to open %s: %s",
                             joystick->hwdata->fname, strerror(errno));
