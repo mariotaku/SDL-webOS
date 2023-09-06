@@ -1011,6 +1011,10 @@ static void DeleteHIDDeviceWrapper(SDL_hid_device *device)
 {
     device->magic = NULL;
     SDL_free(device);
+#if __WEBOS__
+    SDL_HIDAPI_discovery.m_unPresenceFlags = hidraw_presence_flags();
+    SDL_HIDAPI_discovery.m_unLastDetect = SDL_GetTicks();
+#endif
 }
 
 #define CHECK_DEVICE_MAGIC(device, retval)           \

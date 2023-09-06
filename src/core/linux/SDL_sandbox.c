@@ -28,6 +28,9 @@
 SDL_Sandbox SDL_DetectSandbox(void)
 {
 #if __WEBOS__
+    if (SDL_getenv("SDL_WEBOS_FORCE_JAILED") != NULL) {
+        return SDL_SANDBOX_UNKNOWN_CONTAINER;
+    }
     if (access("/var/palm/jail", F_OK) == 0) {
         return SDL_SANDBOX_NONE;
     }
