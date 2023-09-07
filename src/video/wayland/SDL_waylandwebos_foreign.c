@@ -95,15 +95,9 @@ const char *WaylandWebOS_CreateExportedWindow(_THIS, SDL_webOSExportedWindowType
     foreign_window->exported = wl_webos_foreign_export_element(data->webos_foreign, window_data->surface, type);
     wl_webos_exported_add_listener(foreign_window->exported, &exported_listener, foreign_window);
     // This is a pretty bad idea, but LG did it even worse - they create a detached thread per 10 ms
-    // Some better way would be utilizing SDL_cond I guess?
-    if (_this->thread == SDL_ThreadID()) {
+    while (foreign_window->window_id[0] == '\0') {
+        SDL_Delay(10);
         WAYLAND_wl_display_dispatch(data->display);
-        SDL_PumpEvents();
-    } else {
-        while (foreign_window->window_id[0] == '\0') {
-            SDL_Delay(10);
-            WAYLAND_wl_display_dispatch(data->display);
-        }
     }
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Created exported window %s", foreign_window->window_id);
     SDL_UnlockMutex(_this->webos_foreign_lock);
