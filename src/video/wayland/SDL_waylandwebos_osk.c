@@ -214,6 +214,10 @@ void osk_keysym(void *data, struct text_model *text_model, uint32_t serial, uint
     if (scancode == SDL_SCANCODE_UNKNOWN) {
         return;
     }
+    if (SDL_GetHintBoolean(SDL_HINT_RETURN_KEY_HIDES_IME, SDL_FALSE) && scancode == SDL_SCANCODE_RETURN) {
+        SDL_StopTextInput();
+        return;
+    }
     SDL_SendKeyboardKey(state, scancode);
 }
 

@@ -764,7 +764,7 @@ int main(int argc, char *argv[])
                 Redraw();
                 break;
             case SDL_MOUSEBUTTONUP:
-                if (SDL_IsScreenSaverEnabled()) {
+                if (SDL_HasScreenKeyboardSupport()) {
                     SDL_Point mousePoint = { event.button.x, event.button.y };
                     if (SDL_PointInRect(&mousePoint, &textRect)) {
                         SDL_StartTextInput();
