@@ -25,6 +25,7 @@
 
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
 
+#include "../../SDL_hints_c.h"
 #include "../../core/webos/SDL_webos_libs.h"
 #include "../../events/SDL_events_c.h"
 #include "SDL_hints.h"
@@ -53,6 +54,15 @@ enum wl_webos_shell_surface_state {
 };
 #endif /* WL_WEBOS_SHELL_SURFACE_STATE_ENUM */
 
+static const char* webos_window_hints[] = {
+    SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_BACK,
+    SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_EXIT,
+    SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE,
+    SDL_HINT_WEBOS_CURSOR_FREQUENCY,
+    SDL_HINT_WEBOS_CURSOR_SLEEP_TIME,
+    NULL,
+};
+
 static void webos_shell_handle_state(void *data, struct wl_webos_shell_surface *wl_webos_shell_surface, uint32_t state);
 
 static void webos_shell_handle_position(void *data, struct wl_webos_shell_surface *wl_webos_shell_surface, int32_t x, int32_t y);
@@ -71,6 +81,8 @@ const static struct wl_webos_shell_surface_listener webos_shell_surface_listener
     .state_about_to_change = webos_shell_handle_state_about_to_change,
 };
 
+static void WindowHintsCallback(void *userdata, const char *name, const char *oldValue, const char *newValue);
+
 void WaylandWebOS_VideoInit(_THIS)
 {
     const char *hintValue = NULL;
@@ -81,11 +93,20 @@ void WaylandWebOS_VideoInit(_THIS)
     } else {
         _this->webos_cursor_sleep_time = 300000;
     }
+
+    for(int i = 0; webos_window_hints[i] != NULL; i++) {
+        SDL_AddHintCallback(webos_window_hints[i], WindowHintsCallback, _this);
+    }
 }
 
 void WaylandWebOS_VideoCleanUp(_THIS)
 {
     SDL_VideoData *data = _this->driverdata;
+
+    for (int i = 0; webos_window_hints[i] != NULL; i++) {
+        SDL_DelHintCallback(webos_window_hints[i], WindowHintsCallback, _this);
+    }
+
     SDL_LockMutex(_this->webos_foreign_lock);
     if (data->webos_foreign_table != NULL) {
         webos_foreign_window *window = data->webos_foreign_table->windows;
@@ -175,6 +196,40 @@ static void webos_shell_handle_state_about_to_change(void *data, struct wl_webos
         return;
     }
     SDL_SendAppEvent(SDL_APP_WILLENTERBACKGROUND);
+}
+
+static void WindowHintsCallback(void *userdata, const char *name, const char *oldValue, const char *newValue)
+{
+    SDL_VideoDevice *_this = userdata;
+    SDL_Window * windows = _this->windows;
+    SDL_WindowData *win_data;
+    if (windows == NULL) {
+        return;
+    }
+    win_data = windows->driverdata;
+    if (win_data == NULL) {
+        return;
+    }
+    if (SDL_strcmp(name, SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_BACK) == 0 ) {
+        wl_webos_shell_surface_set_property(win_data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_KEYS_BACK",
+                                            SDL_GetStringBoolean(newValue, SDL_FALSE) ? "true" : "false");
+    } else if (SDL_strcmp(name, SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_EXIT) == 0) {
+        wl_webos_shell_surface_set_property(win_data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_KEYS_EXIT",
+                                            SDL_GetStringBoolean(newValue, SDL_FALSE) ? "true" : "false");
+    } else if (SDL_strcmp(name, SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE) == 0) {
+        wl_webos_shell_surface_set_property(win_data->shell_surface.webos, "restore_cursor_position",
+                                            SDL_GetStringBoolean(newValue, SDL_FALSE) ? "true" : "false");
+    } else if (SDL_strcmp(name, SDL_HINT_WEBOS_CURSOR_FREQUENCY) == 0) {
+        if (SDL_strtol(newValue, NULL, 10) > 0) {
+            wl_webos_shell_surface_set_property(win_data->shell_surface.webos, "cursor_fps", newValue);
+        }
+    } else if (SDL_strcmp(name, SDL_HINT_WEBOS_CURSOR_SLEEP_TIME) == 0) {
+        if (newValue != NULL) {
+            _this->webos_cursor_sleep_time = strtol(newValue, NULL, 10);
+        } else {
+            _this->webos_cursor_sleep_time = 300000;
+        }
+    }
 }
 
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
