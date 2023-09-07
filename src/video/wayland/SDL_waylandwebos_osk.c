@@ -27,6 +27,7 @@
 
 #include "../../events/SDL_events_c.h"
 #include "../../events/SDL_keysym_to_scancode_c.h"
+#include "SDL_waylandevents_c.h"
 #include "../SDL_sysvideo.h"
 #include "SDL_hints.h"
 #include "SDL_waylandwebos_osk.h"
@@ -34,23 +35,11 @@
 
 struct webos_osk_data
 {
-    struct wl_registry *registry;
-    struct text_model_factory *text_model_factory;
     struct text_model *text_model;
-    struct wl_seat *seat;
     uint32_t index;
     uint32_t length;
     uint32_t state;
 };
-
-static void osk_registry_handle(void*data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version);
-static void osk_registry_remove(void *data, struct wl_registry *registry, uint32_t id);
-
-static const struct wl_registry_listener osk_registry_listener = {
-    .global = osk_registry_handle,
-    .global_remove = osk_registry_remove,
-};
-
 
 static void osk_commit_string(void *data, struct text_model *text_model, uint32_t serial, const char *text);
 static void osk_preedit_string(void *data, struct text_model *text_model, uint32_t serial, const char *text, const char *commit);
@@ -80,27 +69,35 @@ static const struct text_model_listener osk_text_model_listener = {
     .input_panel_rect = input_panel_rect,
 };
 
-static void ensureWaylandConnection(SDL_VideoData *waylandData);
-
 static void ensureTextModel(SDL_VideoData *waylandData);
 
 SDL_bool WaylandWebOS_HasScreenKeyboardSupport(_THIS)
 {
-    return SDL_TRUE;
+    SDL_VideoData * waylandData = _this->driverdata;
+    if (_this->windows == NULL) {
+        // The first window is not created yet, so we assume the system has screen keyboard support
+        return SDL_TRUE;
+    }
+    return waylandData->text_model_factory != NULL;
 }
 
 void WaylandWebOS_ShowScreenKeyboard(_THIS, SDL_Window *window)
 {
     SDL_WindowData * windowData = window->driverdata;
     SDL_VideoData *waylandData = windowData->waylandData;
+    struct SDL_WaylandInput *input = waylandData->input;
     struct webos_osk_data *oskData;
 
-    ensureWaylandConnection(waylandData);
+    if (waylandData->text_model_factory == NULL) {
+        // Screen keyboard is not supported
+        return;
+    }
+
     ensureTextModel(waylandData);
     oskData = waylandData->webos_screen_keyboard_data;
     if (oskData) {
         static uint32_t text_model_serial = 0;
-        text_model_activate(oskData->text_model, ++text_model_serial, oskData->seat, windowData->surface);
+        text_model_activate(oskData->text_model, ++text_model_serial, input->seat, windowData->surface);
         text_model_set_content_type(oskData->text_model, 7, 0);
         window->flags |= SDL_WINDOW_INPUT_FOCUS;
     }
@@ -110,12 +107,14 @@ void WaylandWebOS_HideScreenKeyboard(_THIS, SDL_Window *window)
 {
     SDL_WindowData * windowData = window->driverdata;
     SDL_VideoData *waylandData = windowData->waylandData;
-    struct webos_osk_data *oskData = waylandData->webos_screen_keyboard_data;
-    if (oskData && oskData->text_model && oskData->seat) {
-        text_model_deactivate(oskData->text_model, oskData->seat);
-        oskData->text_model = NULL;
-        oskData->state = 0;
+    struct SDL_WaylandInput *input = waylandData->input;
+    struct webos_osk_data *osk_data = waylandData->webos_screen_keyboard_data;
+    if (osk_data == NULL || osk_data->text_model == NULL || input->seat == NULL) {
+        return;
     }
+    text_model_deactivate(osk_data->text_model, input->seat);
+    osk_data->text_model = NULL;
+    osk_data->state = 0;
 }
 
 SDL_bool WaylandWebOS_IsScreenKeyboardShown(_THIS, SDL_Window *window)
@@ -129,44 +128,19 @@ SDL_bool WaylandWebOS_IsScreenKeyboardShown(_THIS, SDL_Window *window)
     return SDL_FALSE;
 }
 
-static void ensureWaylandConnection(SDL_VideoData *waylandData)
-{
-    struct webos_osk_data *data = waylandData->webos_screen_keyboard_data;
-    if (data == NULL) {
-        data = SDL_calloc(1, sizeof(struct webos_osk_data));
-        waylandData->webos_screen_keyboard_data = data;
-    }
-    data->registry = wl_display_get_registry(waylandData->display);
-    wl_registry_add_listener(data->registry, &osk_registry_listener, data);
-    WAYLAND_wl_display_dispatch(waylandData->display);
-    WAYLAND_wl_display_flush(waylandData->display);
-}
-
 static void ensureTextModel(SDL_VideoData *waylandData)
 {
-    struct webos_osk_data *data = waylandData->webos_screen_keyboard_data;
-    if (data->text_model_factory == NULL || data->text_model != NULL) {
+    struct webos_osk_data *osk_data = waylandData->webos_screen_keyboard_data;
+    if (osk_data == NULL) {
+        osk_data = SDL_calloc(1, sizeof(struct webos_osk_data));
+        waylandData->webos_screen_keyboard_data = osk_data;
+    } else if (osk_data->text_model != NULL) {
         return;
     }
-    data->text_model = text_model_factory_create_text_model(data->text_model_factory);
-    text_model_add_listener(data->text_model, &osk_text_model_listener, data);
+    osk_data->text_model = text_model_factory_create_text_model(waylandData->text_model_factory);
+    text_model_add_listener(osk_data->text_model, &osk_text_model_listener, osk_data);
     WAYLAND_wl_display_dispatch(waylandData->display);
     WAYLAND_wl_display_flush(waylandData->display);
-}
-
-void osk_registry_handle(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version)
-{
-    struct webos_osk_data *osk_data = data;
-    if (strcmp(interface, "text_model_factory") == 0) {
-        osk_data->text_model_factory = wl_registry_bind(registry, id, &text_model_factory_interface, 1);
-    } else if (strcmp(interface, "wl_seat") == 0) {
-        osk_data->seat = wl_registry_bind(registry, id, &wl_seat_interface, 1);
-    }
-}
-
-void osk_registry_remove(void *data, struct wl_registry *registry, uint32_t id)
-{
-    // No-op
 }
 
 void osk_commit_string(void *data, struct text_model *text_model, uint32_t serial, const char *text)

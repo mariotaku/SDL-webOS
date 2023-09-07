@@ -948,6 +948,8 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
         SDL_VideoDevice *device = SDL_GetVideoDevice();
         d->starfish_pointer = wl_registry_bind(registry, id, &wl_starfish_pointer_interface, 1);
         wl_starfish_pointer_set_mrcu_standby_timer(d->starfish_pointer, device->webos_cursor_sleep_time);
+    } else if (SDL_strcmp(interface, "text_model_factory") == 0) {
+        d->text_model_factory = wl_registry_bind(registry, id, &text_model_factory_interface, 1);
 #endif
     }
 }
