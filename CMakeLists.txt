@@ -510,6 +510,10 @@ if(VITA)
   set_option(VIDEO_VITA_PVR  "Build with PSVita PVR gles/gles2 support" OFF)
 endif()
 
+if(WEBOS)
+  set_option(SDL_WEBOS_BROKEN_ABI "Build with webOS modified ABI" OFF)
+endif()
+
 # General source files
 file(GLOB SOURCE_FILES
   ${SDL2_SOURCE_DIR}/src/*.c
@@ -1713,6 +1717,10 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
     file(GLOB WEBOS_SOURCES ${SDL2_SOURCE_DIR}/src/core/webos/*.c)
     list(APPEND SOURCE_FILES ${WEBOS_SOURCES})
     target_compile_definitions(sdl-build-options INTERFACE "-D__WEBOS__")
+
+    if (SDL_WEBOS_BROKEN_ABI)
+      set(HAVE_WEBOS_BROKEN_ABI 1)
+    endif()
   endif()
 
   set(SDL_RLD_FLAGS "")

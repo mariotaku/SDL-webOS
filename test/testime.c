@@ -763,6 +763,16 @@ int main(int argc, char *argv[])
                 cursor = event.edit.start;
                 Redraw();
                 break;
+            case SDL_MOUSEBUTTONUP:
+                if (SDL_IsScreenSaverEnabled()) {
+                    SDL_Point mousePoint = { event.button.x, event.button.y };
+                    if (SDL_PointInRect(&mousePoint, &textRect)) {
+                        SDL_StartTextInput();
+                    } else {
+                        SDL_StopTextInput();
+                    }
+                    break;
+                }
             }
         }
     }

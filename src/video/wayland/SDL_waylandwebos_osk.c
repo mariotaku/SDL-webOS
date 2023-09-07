@@ -26,9 +26,9 @@
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
 
 #include "../../events/SDL_events_c.h"
+#include "../../events/SDL_keysym_to_scancode_c.h"
 #include "../SDL_sysvideo.h"
 #include "SDL_hints.h"
-#include "SDL_timer.h"
 #include "SDL_waylandwebos_osk.h"
 #include "webos-client-protocol.h"
 
@@ -113,6 +113,8 @@ void WaylandWebOS_HideScreenKeyboard(_THIS, SDL_Window *window)
     struct webos_osk_data *oskData = waylandData->webos_screen_keyboard_data;
     if (oskData && oskData->text_model && oskData->seat) {
         text_model_deactivate(oskData->text_model, oskData->seat);
+        oskData->text_model = NULL;
+        oskData->state = 0;
     }
 }
 
@@ -175,7 +177,7 @@ void osk_commit_string(void *data, struct text_model *text_model, uint32_t seria
 void osk_preedit_string(void *data, struct text_model *text_model, uint32_t serial, const char *text, const char *commit) {
     struct webos_osk_data *osk_data = data;
     if (osk_data->length != 0) {
-        SDL_SendKeyboardText(text);
+        SDL_SendEditingText(text, 0, (int) SDL_strlen(text));
     }
 }
 
@@ -197,9 +199,23 @@ void osk_preedit_styling(void *data, struct text_model *text_model, uint32_t ser
     osk_data->length = length;
 }
 
-void osk_preedit_cursor(void *data, struct text_model *text_model, uint32_t serial, int32_t index) {}
-void osk_modifiers_map(void *data, struct text_model *text_model, struct wl_array *map) {}
-void osk_keysym(void *data, struct text_model *text_model, uint32_t serial, uint32_t time, uint32_t sym, uint32_t state, uint32_t modifiers) {}
+void osk_preedit_cursor(void *data, struct text_model *text_model, uint32_t serial, int32_t index)
+{
+}
+
+void osk_modifiers_map(void *data, struct text_model *text_model, struct wl_array *map)
+{
+
+}
+
+void osk_keysym(void *data, struct text_model *text_model, uint32_t serial, uint32_t time, uint32_t sym, uint32_t state, uint32_t modifiers)
+{
+    SDL_Scancode scancode = SDL_GetScancodeFromKeySym(sym, 0);
+    if (scancode == SDL_SCANCODE_UNKNOWN) {
+        return;
+    }
+    SDL_SendKeyboardKey(state, scancode);
+}
 
 void osk_enter(void *data, struct text_model *text_model, struct wl_surface *surface)
 {
@@ -217,7 +233,12 @@ void osk_input_panel_state(void *data, struct text_model *text_model, uint32_t s
 {
     struct webos_osk_data *osk_data = data;
     osk_data->state = state;
+    if (state == 0) {
+        SDL_StopTextInput();
+    }
 }
 
-void input_panel_rect(void *data, struct text_model *text_model, int32_t x, int32_t y, uint32_t width, uint32_t height) {}
+void input_panel_rect(void *data, struct text_model *text_model, int32_t x, int32_t y, uint32_t width, uint32_t height)
+{
+}
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
