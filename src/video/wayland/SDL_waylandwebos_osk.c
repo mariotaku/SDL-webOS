@@ -86,7 +86,7 @@ void WaylandWebOS_ShowScreenKeyboard(_THIS, SDL_Window *window)
     SDL_WindowData * windowData = window->driverdata;
     SDL_VideoData *waylandData = windowData->waylandData;
     struct SDL_WaylandInput *input = waylandData->input;
-    struct webos_osk_data *oskData;
+    struct webos_osk_data *osk_data;
 
     if (waylandData->text_model_factory == NULL) {
         // Screen keyboard is not supported
@@ -94,11 +94,11 @@ void WaylandWebOS_ShowScreenKeyboard(_THIS, SDL_Window *window)
     }
 
     ensureTextModel(waylandData);
-    oskData = waylandData->webos_screen_keyboard_data;
-    if (oskData) {
+    osk_data = waylandData->webos_screen_keyboard_data;
+    if (osk_data) {
         static uint32_t text_model_serial = 0;
-        text_model_activate(oskData->text_model, ++text_model_serial, input->seat, windowData->surface);
-        text_model_set_content_type(oskData->text_model, 7, 0);
+        text_model_activate(osk_data->text_model, ++text_model_serial, input->seat, windowData->surface);
+        text_model_set_content_type(osk_data->text_model, 7, 0);
         window->flags |= SDL_WINDOW_INPUT_FOCUS;
     }
 }

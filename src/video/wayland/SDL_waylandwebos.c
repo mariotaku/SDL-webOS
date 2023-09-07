@@ -119,6 +119,10 @@ void WaylandWebOS_VideoCleanUp(_THIS)
     }
     SDL_UnlockMutex(_this->webos_foreign_lock);
     SDL_DestroyMutex(_this->webos_foreign_lock);
+
+    if (data->webos_screen_keyboard_data != NULL) {
+        SDL_free(data->webos_screen_keyboard_data);
+    }
 }
 
 int WaylandWebOS_SetupSurface(_THIS, SDL_WindowData *data)
