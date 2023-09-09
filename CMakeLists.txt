@@ -1718,8 +1718,12 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
     list(APPEND SOURCE_FILES ${WEBOS_SOURCES})
     target_compile_definitions(sdl-build-options INTERFACE "-D__WEBOS__")
 
-    if (SDL_WEBOS_BROKEN_ABI)
+    if(SDL_WEBOS_BROKEN_ABI)
       set(HAVE_WEBOS_BROKEN_ABI 1)
+    endif()
+
+    if(NOT HAVE_WAYLAND)
+      message_error("webOS requires Wayland support")
     endif()
   endif()
 
