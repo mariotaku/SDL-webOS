@@ -10,6 +10,7 @@
 #include "SDL_webos_helpers_sym.h"
 
 #define SDL_PBNJSON_SYM(rc, fn, params)     SDL_DYNPBNJSONFN_##fn PBNJSON_##fn;
+#define SDL_PBNJSON_SYM_OPT(rc, fn, params) SDL_DYNPBNJSONFN_##fn PBNJSON_##fn;
 #include "SDL_webos_pbnjson_sym.h"
 
 
@@ -44,7 +45,8 @@ void SDL_webOSUnloadLibraries()
     }
     LibHelpersHandle = NULL;
 
-#define SDL_PBNJSON_SYM(rc, fn, params) PBNJSON_##fn = NULL;
+#define SDL_PBNJSON_SYM(rc, fn, params)     PBNJSON_##fn = NULL;
+#define SDL_PBNJSON_SYM_OPT(rc, fn, params) PBNJSON_##fn = NULL;
 #include "SDL_webos_pbnjson_sym.h"
     if (LibPbnjsonHandle != NULL) {
         SDL_UnloadObject(LibPbnjsonHandle);
@@ -88,7 +90,8 @@ int LoadPbnjson()
         SDL_webOSUnloadLibraries();
         return SDL_SetError("Failed to load libpbnjson_c");
     }
-#define SDL_PBNJSON_SYM(rc, fn, params) PBNJSON_##fn = (SDL_DYNPBNJSONFN_##fn)WebOSGetSym(LibPbnjsonHandle, #fn, 1, &valid);
+#define SDL_PBNJSON_SYM(rc, fn, params)     PBNJSON_##fn = (SDL_DYNPBNJSONFN_##fn)WebOSGetSym(LibPbnjsonHandle, #fn, 1, &valid);
+#define SDL_PBNJSON_SYM_OPT(rc, fn, params) PBNJSON_##fn = (SDL_DYNPBNJSONFN_##fn)WebOSGetSym(LibPbnjsonHandle, #fn, 0, &valid);
 #include "SDL_webos_pbnjson_sym.h"
     if (!valid) {
         SDL_webOSUnloadLibraries();

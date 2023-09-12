@@ -21,7 +21,7 @@
 
 #include "../SDL_sysurl.h"
 
-#include "../../core/webos/SDL_webos_libs.h"
+#include "../../core/webos/SDL_webos_json.h"
 #include "../../core/webos/SDL_webos_luna.h"
 
 int SDL_SYS_OpenURL(const char *url)
@@ -33,7 +33,7 @@ int SDL_SYS_OpenURL(const char *url)
                                               PBNJSON_jkeyval(J_CSTR_TO_JVAL("target"), PBNJSON_j_cstr_to_jval(url)),
                                               J_END_OBJ_DECL)),
         J_END_OBJ_DECL);
-    const char *payload = PBNJSON_jvalue_stringify(payload_obj);
+    const char *payload = SDL_webOSJsonStringify(payload_obj);
     ret = SDL_webOSLunaServiceCallSync("luna://com.webos.applicationManager/launch", payload, 1, NULL);
     PBNJSON_j_release(&payload_obj);
     if (!ret) {

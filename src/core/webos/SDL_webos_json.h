@@ -27,6 +27,8 @@
 
 extern jvalue_ref SDL_webOSJsonParse(const char* json, jdomparser_ref *parser, SDL_bool failOnNegative);
 
+extern const char* SDL_webOSJsonStringify(jvalue_ref value);
+
 extern jvalue_ref PBNJSON_jobject_get_nested(jvalue_ref obj, ...);
 
 #endif // SDL_webos_json_h_

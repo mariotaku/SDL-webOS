@@ -208,7 +208,7 @@ static SDL_bool registerScreenSaverRequest(const char *appId)
     s_ScreenSaverRequestContext.callback = screenSaverRequestCallback;
 
     result = HELPERS_HLunaServiceCall("luna://com.webos.service.tvpower/power/registerScreenSaverRequest",
-                                      PBNJSON_jvalue_stringify(payload), &s_ScreenSaverRequestContext) == 0;
+                                      SDL_webOSJsonStringify(payload), &s_ScreenSaverRequestContext) == 0;
 
     PBNJSON_j_release(&payload);
     return result;
@@ -249,7 +249,7 @@ static int screenSaverRequestCallback(LSHandle *sh, LSMessage *reply, HContext *
         NULL);
 
     SDL_webOSLunaServiceJustCall("luna://com.webos.service.tvpower/power/responseScreenSaverRequest",
-                                 PBNJSON_jvalue_stringify(response), 1);
+                                 SDL_webOSJsonStringify(response), 1);
     PBNJSON_j_release(&response);
     PBNJSON_jdomparser_release(&parser);
     return 1;

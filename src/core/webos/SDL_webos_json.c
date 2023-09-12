@@ -32,7 +32,16 @@ jvalue_ref SDL_webOSJsonParse(const char *json, jdomparser_ref *parser, SDL_bool
     return result;
 }
 
-jvalue_ref PBNJSON_jobject_get_nested(jvalue_ref obj, ...) {
+extern const char* SDL_webOSJsonStringify(jvalue_ref value)
+{
+    if (PBNJSON_jvalue_stringify != NULL) {
+        return PBNJSON_jvalue_stringify(value);
+    }
+    return PBNJSON_jvalue_tostring_simple(value);
+}
+
+jvalue_ref PBNJSON_jobject_get_nested(jvalue_ref obj, ...)
+{
     va_list iter;
     const char *key;
     va_start(iter, obj);

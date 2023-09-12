@@ -26,6 +26,9 @@
 #ifndef SDL_PBNJSON_SYM
 #define SDL_PBNJSON_SYM(rc,fn,params)
 #endif
+#ifndef SDL_PBNJSON_SYM_OPT
+#define SDL_PBNJSON_SYM_OPT(rc,fn,params)
+#endif
 
 SDL_PBNJSON_SYM(jvalue_ref, jobject_create_var, (jobject_key_value item, ...))
 SDL_PBNJSON_SYM(jvalue_ref, jobject_get, (jvalue_ref obj, raw_buffer key))
@@ -35,13 +38,14 @@ SDL_PBNJSON_SYM(int, jis_number, (jvalue_ref val))
 SDL_PBNJSON_SYM(int, jis_string, (jvalue_ref val))
 SDL_PBNJSON_SYM(int, jis_null, (jvalue_ref val))
 SDL_PBNJSON_SYM(jvalue_ref, jinvalid, (void))
-SDL_PBNJSON_SYM(const char*, jvalue_stringify, (jvalue_ref val))
 SDL_PBNJSON_SYM(jvalue_ref, jboolean_create, (int val))
 SDL_PBNJSON_SYM(ConversionResultFlags, jboolean_get, (jvalue_ref val, int *boolean))
 SDL_PBNJSON_SYM(ConversionResultFlags, jnumber_get_i32, (jvalue_ref val, int32_t *number))
 SDL_PBNJSON_SYM(jvalue_ref, jstring_create_nocopy, (raw_buffer val))
 SDL_PBNJSON_SYM(raw_buffer, jstring_get_fast, (jvalue_ref str))
 SDL_PBNJSON_SYM(void, j_release, (jvalue_ref *val))
+SDL_PBNJSON_SYM(const char*, jvalue_tostring_simple, (jvalue_ref val))
+SDL_PBNJSON_SYM_OPT(const char*, jvalue_stringify, (jvalue_ref val))
 
 SDL_PBNJSON_SYM(jschema_ref, jschema_all, ())
 SDL_PBNJSON_SYM(void, jschema_info_init, (JSchemaInfoRef schemaInfo, jschema_ref schema, JSchemaResolverRef resolver, JErrorCallbacksRef errHandler))
@@ -53,6 +57,7 @@ SDL_PBNJSON_SYM(void, jdomparser_release, (jdomparser_ref *parser))
 SDL_PBNJSON_SYM(jvalue_ref, jdomparser_get_result, (jdomparser_ref parser))
 
 #undef SDL_PBNJSON_SYM
+#undef SDL_PBNJSON_SYM_OPT
 
 /* *INDENT-ON* */ /* clang-format on */
 

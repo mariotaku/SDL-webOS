@@ -41,6 +41,9 @@ extern void SDL_webOSUnloadLibraries();
 #define SDL_PBNJSON_SYM(rc, fn, params)         \
     typedef rc(*SDL_DYNPBNJSONFN_##fn) params;  \
     extern SDL_DYNPBNJSONFN_##fn PBNJSON_##fn;
+#define SDL_PBNJSON_SYM_OPT(rc, fn, params)     \
+    typedef rc(*SDL_DYNPBNJSONFN_##fn) params;  \
+    extern SDL_DYNPBNJSONFN_##fn PBNJSON_##fn;
 #include "SDL_webos_pbnjson_sym.h"
 #include "SDL_webos_pbnjson_inlines.h"
 
