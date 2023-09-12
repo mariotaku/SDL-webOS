@@ -461,60 +461,6 @@ static int is_hidraw(const struct dirent *dir)
     return dir->d_type == DT_CHR && strncmp(dir->d_name, "hidraw", 6) == 0;
 }
 
-static SDL_bool is_char_device_present(dev_t devnum)
-{
-    char path[256];
-    struct stat st;
-    snprintf(path, 256, "/sys/dev/char/%u:%u", major(devnum), minor(devnum));
-    return stat(path, &st) == 0;
-}
-
-static Uint32 hidraw_presence_flags()
-{
-    Uint32 flags = 0;
-    struct dirent **dev_list;
-    int dev_dir_fd;
-    int dev_count;
-
-    dev_dir_fd = open("/dev", O_RDONLY | O_DIRECTORY);
-
-    if (dev_dir_fd < 0) {
-        return 0;
-    }
-
-    dev_count = scandir("/dev", &dev_list, is_hidraw, alphasort);
-
-    if (dev_count < 0) {
-        close(dev_dir_fd);
-        return 0;
-    }
-
-    for (int dev_idx = 0; dev_idx < dev_count; dev_idx++) {
-        struct stat dev_st;
-        int ret;
-        int dev_num;
-        char *endptr = NULL;
-        ret = fstatat(dev_dir_fd, dev_list[dev_idx]->d_name, &dev_st, 0);
-        if (ret != 0 || !S_ISCHR(dev_st.st_mode)) {
-            free(dev_list[dev_idx]); /* SHOULD NOT be freed with SDL_free() */
-            continue;
-        }
-        dev_num = strtol(dev_list[dev_idx]->d_name + 6, &endptr, 10);
-        if (endptr == NULL || *endptr != '\0') {
-            free(dev_list[dev_idx]); /* SHOULD NOT be freed with SDL_free() */
-            continue;
-        }
-        if (is_char_device_present(dev_st.st_rdev)) {
-            flags |= 1 << dev_num;
-        }
-        free(dev_list[dev_idx]); /* SHOULD NOT be freed with SDL_free() */
-    }
-    free(dev_list); /* SHOULD NOT be freed with SDL_free() */
-
-    close(dev_dir_fd);
-
-    return flags;
-}
 
 int HID_API_EXPORT hid_init(void)
 {

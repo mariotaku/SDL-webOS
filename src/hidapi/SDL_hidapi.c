@@ -55,7 +55,7 @@
 #endif
 
 #if __WEBOS__
-#include "webos/hid.h"
+#include "../joystick/webos/dev_presence.h"
 #endif /* __WEBOS__ */
 
 #include "../core/linux/SDL_udev.h"
@@ -460,7 +460,7 @@ static void HIDAPI_UpdateDiscovery()
         Uint32 next_detect = SDL_HIDAPI_discovery.m_unLastDetect + SDL_HIDAPI_DETECT_INTERVAL_MS;
         if (!SDL_HIDAPI_discovery.m_unLastDetect || SDL_TICKS_PASSED(now, next_detect)) {
             // Loop through /dev/hidraw*
-            Uint32 flags = hidraw_presence_flags();
+            Uint32 flags = SDL_webOSGetDevicePresenceFlags(SDL_WEBOS_DEVICE_PRESENCE_CHECK_HIDRAW);
             if (flags != SDL_HIDAPI_discovery.m_unPresenceFlags) {
                 ++SDL_HIDAPI_discovery.m_unDeviceChangeCounter;
                 SDL_HIDAPI_discovery.m_unPresenceFlags = flags;
@@ -1012,7 +1012,7 @@ static void DeleteHIDDeviceWrapper(SDL_hid_device *device)
     device->magic = NULL;
     SDL_free(device);
 #if __WEBOS__
-    SDL_HIDAPI_discovery.m_unPresenceFlags = hidraw_presence_flags();
+    SDL_HIDAPI_discovery.m_unPresenceFlags = SDL_webOSGetDevicePresenceFlags(SDL_WEBOS_DEVICE_PRESENCE_CHECK_HIDRAW);
     SDL_HIDAPI_discovery.m_unLastDetect = SDL_GetTicks();
 #endif
 }

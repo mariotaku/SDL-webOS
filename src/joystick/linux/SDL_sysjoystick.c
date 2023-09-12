@@ -123,6 +123,10 @@
 #include "../../core/linux/SDL_udev.h"
 #include "../../core/linux/SDL_sandbox.h"
 
+#if __WEBOS__
+#include "../webos/dev_presence.h"
+#endif
+
 #if 0
 #define DEBUG_INPUT_EVENTS 1
 #endif
@@ -173,6 +177,7 @@ static int inotify_fd = -1;
 
 static Uint32 last_joy_detect_time;
 static time_t last_input_dir_mtime;
+static Uint32 last_input_presence_flags;
 
 static void FixupDeviceInfoForMapping(int fd, struct input_id *inpid)
 {
@@ -699,8 +704,27 @@ static void LINUX_FallbackJoystickDetect(void)
     Uint32 now = SDL_GetTicks();
 
     if (!last_joy_detect_time || SDL_TICKS_PASSED(now, last_joy_detect_time + SDL_JOY_DETECT_INTERVAL_MS)) {
+#if __WEBOS__
+        SDL_webOSDevicePresenceCheck check = SDL_classic_joysticks ? SDL_WEBOS_DEVICE_PRESENCE_CHECK_JS : SDL_WEBOS_DEVICE_PRESENCE_CHECK_EVDEV;
+        Uint32 presence_flags = SDL_webOSGetDevicePresenceFlags(check);
+        if (presence_flags != last_input_presence_flags) {
+            char path[PATH_MAX];
+            for (int i = 0; i < 32; i++) {
+                if (SDL_webOSIsDeviceIndexPresent(presence_flags, i)) {
+                    if (check == SDL_WEBOS_DEVICE_PRESENCE_CHECK_EVDEV) {
+                        SDL_snprintf(path, SDL_arraysize(path), "/dev/input/event%d", i);
+                    } else if (check == SDL_WEBOS_DEVICE_PRESENCE_CHECK_JS) {
+                        SDL_snprintf(path, SDL_arraysize(path), "/dev/input/js%d", i);
+                    } else {
+                        break;
+                    }
+                    MaybeAddDevice(path);
+                }
+            }
+            last_input_presence_flags = presence_flags;
+        }
+#else
         struct stat sb;
-
         /* Opening input devices can generate synchronous device I/O, so avoid it if we can */
         if (stat("/dev/input", &sb) == 0 && sb.st_mtime != last_input_dir_mtime) {
             int i, count;
@@ -723,6 +747,7 @@ static void LINUX_FallbackJoystickDetect(void)
         }
 
         last_joy_detect_time = now;
+#endif
     }
 }
 
@@ -777,6 +802,7 @@ static int LINUX_JoystickInit(void)
     /* Force immediate joystick detection if using fallback */
     last_joy_detect_time = 0;
     last_input_dir_mtime = 0;
+    last_input_presence_flags = 0;
 
     /* Manually scan first, since we sort by device number and udev doesn't */
     LINUX_JoystickDetect();
