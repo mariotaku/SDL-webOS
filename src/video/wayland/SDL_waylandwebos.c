@@ -162,7 +162,7 @@ static void webos_shell_handle_state(void *data, struct wl_webos_shell_surface *
 {
     SDL_WindowData *d = data;
     if (state == WL_WEBOS_SHELL_SURFACE_STATE_MINIMIZED) {
-        HELPERS_HProcessAppState(3);
+        HELPERS_HProcessAppState(3, NULL);
         SDL_SendWindowEvent(d->sdlwindow, SDL_WINDOWEVENT_MINIMIZED, 0, 0);
         SDL_SendAppEvent(SDL_APP_WILLENTERBACKGROUND);
         SDL_SendAppEvent(SDL_APP_DIDENTERBACKGROUND);
@@ -171,7 +171,7 @@ static void webos_shell_handle_state(void *data, struct wl_webos_shell_surface *
             SDL_SendWindowEvent(d->sdlwindow, SDL_WINDOWEVENT_RESTORED, 0, 0);
             SDL_SendAppEvent(SDL_APP_WILLENTERFOREGROUND);
             SDL_SendAppEvent(SDL_APP_DIDENTERFOREGROUND);
-            HELPERS_HProcessAppState(0);
+            HELPERS_HProcessAppState(0, NULL);
         }
     }
     d->webos_shell_state = state;
@@ -200,6 +200,7 @@ static void webos_shell_handle_state_about_to_change(void *data, struct wl_webos
         return;
     }
     SDL_SendAppEvent(SDL_APP_WILLENTERBACKGROUND);
+    HELPERS_HProcessAppState(1, NULL);
 }
 
 static void WindowHintsCallback(void *userdata, const char *name, const char *oldValue, const char *newValue)
