@@ -247,7 +247,9 @@ static SDL_VideoDevice *Wayland_CreateDevice(void)
     device->SuspendScreenSaver = Wayland_SuspendScreenSaver;
 
     device->PumpEvents = Wayland_PumpEvents;
-    device->WaitEventTimeout = Wayland_WaitEventTimeout;
+    if (WAYLAND_wl_display_read_events) {
+        device->WaitEventTimeout = Wayland_WaitEventTimeout;
+    }
     device->SendWakeupEvent = Wayland_SendWakeupEvent;
 
 #if SDL_VIDEO_OPENGL_EGL

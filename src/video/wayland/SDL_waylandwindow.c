@@ -538,7 +538,11 @@ static void gles_swap_frame_done(void *data, struct wl_callback *cb, uint32_t ti
     SDL_AtomicSet(&wind->swap_interval_ready, 1); /* mark window as ready to present again. */
 
     /* reset this callback to fire again once a new frame was presented and compositor wants the next one. */
-    wind->gles_swap_frame_callback = wl_surface_frame(wind->gles_swap_frame_surface_wrapper);
+    if (wind->gles_swap_frame_surface_wrapper) {
+        wind->gles_swap_frame_callback = wl_surface_frame(wind->gles_swap_frame_surface_wrapper);
+    } else {
+        wind->gles_swap_frame_callback = wl_surface_frame(wind->surface);
+    }
     wl_callback_destroy(cb);
     wl_callback_add_listener(wind->gles_swap_frame_callback, &gles_swap_frame_listener, data);
 }
@@ -2055,10 +2059,14 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
      * window isn't visible.
      */
     if (window->flags & SDL_WINDOW_OPENGL) {
-        data->gles_swap_frame_event_queue = WAYLAND_wl_display_create_queue(data->waylandData->display);
-        data->gles_swap_frame_surface_wrapper = WAYLAND_wl_proxy_create_wrapper(data->surface);
-        WAYLAND_wl_proxy_set_queue((struct wl_proxy *)data->gles_swap_frame_surface_wrapper, data->gles_swap_frame_event_queue);
-        data->gles_swap_frame_callback = wl_surface_frame(data->gles_swap_frame_surface_wrapper);
+        if (WAYLAND_wl_proxy_create_wrapper) {
+            data->gles_swap_frame_event_queue = WAYLAND_wl_display_create_queue(data->waylandData->display);
+            data->gles_swap_frame_surface_wrapper = WAYLAND_wl_proxy_create_wrapper(data->surface);
+            WAYLAND_wl_proxy_set_queue((struct wl_proxy *)data->gles_swap_frame_surface_wrapper, data->gles_swap_frame_event_queue);
+            data->gles_swap_frame_callback = wl_surface_frame(data->gles_swap_frame_surface_wrapper);
+        } else {
+            data->gles_swap_frame_callback = wl_surface_frame(data->surface);
+        }
         wl_callback_add_listener(data->gles_swap_frame_callback, &gles_swap_frame_listener, data);
     }
 
@@ -2330,8 +2338,12 @@ void Wayland_DestroyWindow(_THIS, SDL_Window *window)
 
         if (wind->gles_swap_frame_callback) {
             wl_callback_destroy(wind->gles_swap_frame_callback);
-            WAYLAND_wl_proxy_wrapper_destroy(wind->gles_swap_frame_surface_wrapper);
-            WAYLAND_wl_event_queue_destroy(wind->gles_swap_frame_event_queue);
+            if (wind->gles_swap_frame_surface_wrapper) {
+                WAYLAND_wl_proxy_wrapper_destroy(wind->gles_swap_frame_surface_wrapper);
+            }
+            if(wind->gles_swap_frame_event_queue) {
+                WAYLAND_wl_event_queue_destroy(wind->gles_swap_frame_event_queue);
+            }
         }
 
         if (wind->surface_damage_frame_callback) {

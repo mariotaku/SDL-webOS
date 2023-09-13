@@ -25,6 +25,7 @@
 #define DEBUG_DYNAMIC_WAYLAND 0
 
 #include "SDL_waylanddyn.h"
+#include "SDL_waylanddyn_backport.h"
 
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC
 
@@ -157,6 +158,15 @@ int SDL_WAYLAND_LoadSymbols(void)
             /* in case something got loaded... */
             SDL_WAYLAND_UnloadSymbols();
             rc = 0;
+        }
+        if (!WAYLAND_wl_proxy_get_version) {
+            WAYLAND_wl_proxy_get_version = FALLBACK_wl_proxy_get_version;
+        }
+        if (!WAYLAND_wl_proxy_marshal_constructor) {
+            WAYLAND_wl_proxy_marshal_constructor = FALLBACK_wl_proxy_marshal_constructor;
+        }
+        if(!WAYLAND_wl_proxy_marshal_constructor_versioned) {
+            WAYLAND_wl_proxy_marshal_constructor_versioned = FALLBACK_wl_proxy_marshal_constructor_versioned;
         }
 
 #else /* no dynamic WAYLAND */

@@ -350,20 +350,28 @@ void Wayland_PumpEvents(_THIS)
     }
 #endif
 
-    WAYLAND_wl_display_flush(d->display);
+    if (WAYLAND_wl_display_read_events) {
+        WAYLAND_wl_display_flush(d->display);
 
-    /* wl_display_prepare_read() will return -1 if the default queue is not empty.
-     * If the default queue is empty, it will prepare us for our SDL_IOReady() call. */
-    if (WAYLAND_wl_display_prepare_read(d->display) == 0) {
-        if (SDL_IOReady(WAYLAND_wl_display_get_fd(d->display), SDL_IOR_READ, 0) > 0) {
-            WAYLAND_wl_display_read_events(d->display);
+        /* wl_display_prepare_read() will return -1 if the default queue is not empty.
+         * If the default queue is empty, it will prepare us for our SDL_IOReady() call. */
+        if (WAYLAND_wl_display_prepare_read(d->display) == 0) {
+            if (SDL_IOReady(WAYLAND_wl_display_get_fd(d->display), SDL_IOR_READ, 0) > 0) {
+                WAYLAND_wl_display_read_events(d->display);
+            } else {
+                WAYLAND_wl_display_cancel_read(d->display);
+            }
+        }
+
+        /* Dispatch any pre-existing pending events or new events we may have read */
+        err = WAYLAND_wl_display_dispatch_pending(d->display);
+    } else {
+        if (SDL_IOReady(WAYLAND_wl_display_get_fd(d->display), SDL_IOR_READ, 0)) {
+            err = WAYLAND_wl_display_dispatch(d->display);
         } else {
-            WAYLAND_wl_display_cancel_read(d->display);
+            err = WAYLAND_wl_display_dispatch_pending(d->display);
         }
     }
-
-    /* Dispatch any pre-existing pending events or new events we may have read */
-    err = WAYLAND_wl_display_dispatch_pending(d->display);
 
     if (input && keyboard_repeat_is_set(&input->keyboard_repeat)) {
         uint32_t elapsed = SDL_GetTicks() - input->keyboard_repeat.sdl_press_time;
@@ -1001,7 +1009,7 @@ static void keyboard_handle_keymap(void *data, struct wl_keyboard *keyboard,
     input->keyboard_is_virtual = WAYLAND_xkb_keymap_layout_get_name(input->xkb.keymap, 0) == NULL;
 
     /* Update the keymap if changed. Virtual keyboards use the default keymap. */
-    if (input->xkb.current_group != XKB_GROUP_INVALID) {
+    if (input->xkb.current_group != XKB_GROUP_INVALID && WAYLAND_xkb_keymap_key_for_each) {
         Wayland_Keymap keymap;
         keymap.layout = input->xkb.current_group;
         SDL_GetDefaultKeymap(keymap.keymap);
@@ -1030,6 +1038,9 @@ static void keyboard_handle_keymap(void *data, struct wl_keyboard *keyboard,
         }
     }
 
+    if (!WAYLAND_xkb_compose_table_new_from_locale) {
+        return;
+    }
     /* Set up XKB compose table */
     input->xkb.compose_table = WAYLAND_xkb_compose_table_new_from_locale(input->display->xkb_context,
                                                                          locale, XKB_COMPOSE_COMPILE_NO_FLAGS);
@@ -1289,7 +1300,7 @@ static void keyboard_handle_modifiers(void *data, struct wl_keyboard *keyboard,
     input->xkb.current_group = group;
     keymap.layout = group;
     SDL_GetDefaultKeymap(keymap.keymap);
-    if (!input->keyboard_is_virtual) {
+    if (!input->keyboard_is_virtual && WAYLAND_xkb_keymap_key_for_each) {
         WAYLAND_xkb_keymap_key_for_each(input->xkb.keymap,
                                         Wayland_keymap_iter,
                                         &keymap);
@@ -1425,7 +1436,6 @@ static const struct zwp_primary_selection_source_v1_listener primary_selection_s
 static void webos_seat_info(void *data, struct wl_webos_seat *wl_webos_seat, uint32_t id, const char *name,
                      uint32_t designator, uint32_t capabilities)
 {
-    struct SDL_WaylandInput *input = data;
 }
 
 static const struct wl_webos_seat_listener webos_seat_listener = {
