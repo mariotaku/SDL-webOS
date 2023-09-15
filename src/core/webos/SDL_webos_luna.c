@@ -1,6 +1,7 @@
 #include "../../SDL_internal.h"
 
 #ifdef __WEBOS__
+#include "SDL_hints.h"
 #include "SDL_mutex.h"
 #include "SDL_webos_libs.h"
 #include "SDL_webos_luna.h"
@@ -43,6 +44,12 @@ SDL_bool SDL_webOSLunaServiceCallSync(const char *uri, const char *payload, int 
         SDL_SetError("webOS libraries are not initialized");
         return SDL_FALSE;
     }
+    if (SDL_GetHintBoolean("SDL_WEBOS_DISABLE_LUNA_CALLS", SDL_FALSE)) {
+        SDL_DestroyMutex(userdata.mutex);
+        SDL_DestroyCond(userdata.cond);
+        SDL_SetError("Disabled by SDL_WEBOS_DISABLE_LUNA_CALLS");
+        return SDL_FALSE;
+    }
 
     if (HELPERS_HLunaServiceCall(uri, payload, &context) != 0) {
         SDL_DestroyMutex(userdata.mutex);
@@ -57,6 +64,7 @@ SDL_bool SDL_webOSLunaServiceCallSync(const char *uri, const char *payload, int 
 
     SDL_DestroyMutex(userdata.mutex);
     SDL_DestroyCond(userdata.cond);
+    SDL_ClearError();
     return SDL_TRUE;
 }
 

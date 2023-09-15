@@ -558,6 +558,9 @@ static void display_handle_geometry(void *data,
         }
     }
 #undef TF_CASE
+    if (wl_output_get_version(output) < 2) {
+        display_handle_done(data, output);
+    }
 }
 
 static void display_handle_mode(void *data,
@@ -719,12 +722,12 @@ static const struct wl_output_listener output_listener = {
     display_handle_scale
 };
 
-static void Wayland_add_display(SDL_VideoData *d, uint32_t id)
+static void Wayland_add_display(SDL_VideoData *d, uint32_t id, uint32_t version)
 {
     struct wl_output *output;
     SDL_WaylandOutputData *data;
 
-    output = wl_registry_bind(d->registry, id, &wl_output_interface, 2);
+    output = wl_registry_bind(d->registry, id, &wl_output_interface, SDL_min(2, version));
     if (output == NULL) {
         SDL_SetError("Failed to retrieve output.");
         return;
@@ -882,7 +885,7 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
     if (SDL_strcmp(interface, "wl_compositor") == 0) {
         d->compositor = wl_registry_bind(d->registry, id, &wl_compositor_interface, SDL_min(4, version));
     } else if (SDL_strcmp(interface, "wl_output") == 0) {
-        Wayland_add_display(d, id);
+        Wayland_add_display(d, id, version);
     } else if (SDL_strcmp(interface, "wl_shell") == 0) {
         d->shell.wl = wl_registry_bind(d->registry, id, &wl_shell_interface, 1);
     } else if (SDL_strcmp(interface, "wl_seat") == 0) {
