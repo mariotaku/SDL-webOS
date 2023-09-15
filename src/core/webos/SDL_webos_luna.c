@@ -5,18 +5,13 @@
 #include "SDL_webos_libs.h"
 #include "SDL_webos_luna.h"
 
-struct HContextSync
+typedef struct SyncUserdata
 {
-    union
-    {
-        HContext ctx;
-        __attribute__((unused)) unsigned char placeholder[128];
-    } base;
     SDL_mutex *mutex;
     SDL_cond *cond;
     SDL_bool finished;
     char **output;
-};
+} SyncUserdata;
 
 static int syncCallCallback(LSHandle *sh, LSMessage *reply, HContext *ctx);
 
@@ -33,49 +28,49 @@ extern SDL_bool SDL_webOSLunaServiceJustCall(const char* uri, const char* payloa
 
 SDL_bool SDL_webOSLunaServiceCallSync(const char *uri, const char *payload, int pub, char **output)
 {
-    struct HContextSync context = {
-        .base.ctx = {
-            .multiple = 0,
-            .pub = pub ? 1 : 0,
-            .callback = syncCallCallback,
-        }
+    SyncUserdata userdata = {
+        .mutex = SDL_CreateMutex(),
+        .cond = SDL_CreateCond(),
+        .output = output,
+    };
+    HContext context = {
+        .multiple = 0,
+        .pub = pub ? 1 : 0,
+        .callback = syncCallCallback,
+        .userdata = &userdata,
     };
     if (!HELPERS_HLunaServiceCall) {
         SDL_SetError("webOS libraries are not initialized");
         return SDL_FALSE;
     }
 
-    context.mutex = SDL_CreateMutex();
-    context.cond = SDL_CreateCond();
-    context.output = output;
-
-    if (HELPERS_HLunaServiceCall(uri, payload, &context.base.ctx) != 0) {
-        SDL_DestroyMutex(context.mutex);
-        SDL_DestroyCond(context.cond);
+    if (HELPERS_HLunaServiceCall(uri, payload, &context) != 0) {
+        SDL_DestroyMutex(userdata.mutex);
+        SDL_DestroyCond(userdata.cond);
         return SDL_FALSE;
     }
-    SDL_LockMutex(context.mutex);
-    while (!context.finished) {
-        SDL_CondWait(context.cond, context.mutex);
+    SDL_LockMutex(userdata.mutex);
+    while (!userdata.finished) {
+        SDL_CondWait(userdata.cond, userdata.mutex);
     }
-    SDL_UnlockMutex(context.mutex);
+    SDL_UnlockMutex(userdata.mutex);
 
-    SDL_DestroyMutex(context.mutex);
-    SDL_DestroyCond(context.cond);
+    SDL_DestroyMutex(userdata.mutex);
+    SDL_DestroyCond(userdata.cond);
     return SDL_TRUE;
 }
 
 static int syncCallCallback(LSHandle *sh, LSMessage *reply, HContext *ctx)
 {
-    struct HContextSync *context = (struct HContextSync *)ctx;
+    SyncUserdata *userdata = ctx->userdata;
     (void)sh;
-    SDL_LockMutex(context->mutex);
-    context->finished = SDL_TRUE;
-    if (context->output) {
-        *context->output = SDL_strdup(HELPERS_HLunaServiceMessage(reply));
+    SDL_LockMutex(userdata->mutex);
+    userdata->finished = SDL_TRUE;
+    if (userdata->output) {
+        *userdata->output = SDL_strdup(HELPERS_HLunaServiceMessage(reply));
     }
-    SDL_CondSignal(context->cond);
-    SDL_UnlockMutex(context->mutex);
+    SDL_CondSignal(userdata->cond);
+    SDL_UnlockMutex(userdata->mutex);
     return 0;
 }
 
