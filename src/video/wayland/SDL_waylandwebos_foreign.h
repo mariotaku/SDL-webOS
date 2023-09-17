@@ -28,7 +28,7 @@
 
 #include "SDL_system.h"
 #include "SDL_waylandwindow.h"
-#include "webos-client-protocol.h"
+#include "webos-foreign-client-protocol.h"
 
 typedef struct webos_foreign_window
 {

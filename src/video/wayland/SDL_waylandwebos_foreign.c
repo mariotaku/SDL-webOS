@@ -30,7 +30,6 @@
 #include "SDL_hints.h"
 #include "SDL_timer.h"
 #include "SDL_waylandwebos_foreign.h"
-#include "webos-client-protocol.h"
 
 static void WindowIdAssigned(void *data, struct wl_webos_exported *wl_webos_exported, const char *window_id,
                              uint32_t exported_type);

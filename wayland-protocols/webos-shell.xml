@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="webos_shell">
+  <interface name="wl_webos_shell" version="1">
+    <request name="get_system_pip">
+    </request>
+    <request name="get_shell_surface">
+      <arg name="id" type="new_id" interface="wl_webos_shell_surface"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </request>
+  </interface>
+  <interface name="wl_webos_shell_surface" version="1">
+    <request name="set_location_hint">
+      <arg name="hint" type="uint"/>
+    </request>
+    <request name="set_state">
+      <arg name="state" type="uint"/>
+    </request>
+    <request name="set_property">
+      <arg name="name" type="string"/>
+      <arg name="value" type="string"/>
+    </request>
+    <request name="set_key_mask">
+      <arg name="webos_key" type="uint"/>
+    </request>
+    <request name="set_size">
+      <arg name="p0" type="int"/>
+      <arg name="p1" type="int"/>
+    </request>
+    <event name="state_changed">
+      <arg name="state" type="uint"/>
+    </event>
+    <event name="position_changed">
+      <arg name="x" type="int"/>
+      <arg name="y" type="int"/>
+    </event>
+    <event name="close">
+    </event>
+    <event name="exposed">
+      <arg name="rectangles" type="array"/>
+    </event>
+    <event name="state_about_to_change">
+      <arg name="state" type="uint"/>
+    </event>
+  </interface>
+</protocol>

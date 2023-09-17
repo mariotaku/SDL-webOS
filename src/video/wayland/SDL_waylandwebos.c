@@ -31,7 +31,7 @@
 #include "SDL_hints.h"
 #include "SDL_waylandwebos.h"
 #include "SDL_waylandwebos_foreign.h"
-#include "webos-client-protocol.h"
+#include "webos-shell-client-protocol.h"
 
 #ifndef WL_WEBOS_SHELL_SURFACE_STATE_ENUM
 #define WL_WEBOS_SHELL_SURFACE_STATE_ENUM

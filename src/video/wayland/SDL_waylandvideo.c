@@ -60,7 +60,11 @@
 #include "viewporter-client-protocol.h"
 #include "primary-selection-unstable-v1-client-protocol.h"
 #include "fractional-scale-v1-client-protocol.h"
-#include "webos-client-protocol.h"
+#include "webos-shell-client-protocol.h"
+#include "webos-input-manager-client-protocol.h"
+#include "webos-foreign-client-protocol.h"
+#include "webos-surface-group-client-protocol.h"
+#include "text-client-protocol.h"
 #include "starfish-client-protocol.h"
 
 #ifdef HAVE_LIBDECOR_H
@@ -947,8 +951,6 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
     } else if (SDL_strcmp(interface, "wl_webos_input_manager") == 0) {
         d->webos_input_manager = wl_registry_bind(registry, id, &wl_webos_input_manager_interface, 1);
         wl_webos_input_manager_add_listener(d->webos_input_manager, &webos_input_manager_listener, d);
-    } else if (SDL_strcmp(interface, "wl_webos_surface_group_compositor") == 0) {
-        d->webos_surface_group_compositor = wl_registry_bind(registry, id, &wl_webos_surface_group_compositor_interface, 1);
     } else if (SDL_strcmp(interface, "wl_starfish_pointer") == 0) {
         SDL_VideoDevice *device = SDL_GetVideoDevice();
         d->starfish_pointer = wl_registry_bind(registry, id, &wl_starfish_pointer_interface, 1);

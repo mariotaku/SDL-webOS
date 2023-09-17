@@ -100,7 +100,6 @@ typedef struct
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
     struct wl_webos_foreign *webos_foreign;
     struct wl_webos_input_manager *webos_input_manager;
-    struct wl_webos_surface_group_compositor *webos_surface_group_compositor;
     struct wl_starfish_pointer *starfish_pointer;
     struct text_model_factory *text_model_factory;
     struct {

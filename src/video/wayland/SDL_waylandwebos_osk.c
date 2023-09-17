@@ -31,7 +31,8 @@
 #include "../SDL_sysvideo.h"
 #include "SDL_hints.h"
 #include "SDL_waylandwebos_osk.h"
-#include "webos-client-protocol.h"
+#include "webos-input-manager-client-protocol.h"
+#include "text-client-protocol.h"
 
 struct webos_osk_data
 {

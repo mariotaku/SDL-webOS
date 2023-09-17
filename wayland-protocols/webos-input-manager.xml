@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="webos_input_manager">
+  <interface name="wl_webos_input_manager" version="1">
+    <request name="set_cursor_visibility">
+      <arg name="visibility" type="uint"/>
+    </request>
+    <request name="get_webos_seat">
+      <arg name="id" type="new_id" interface="wl_webos_seat"/>
+      <arg name="seat" type="object" interface="wl_seat"/>
+    </request>
+    <event name="cursor_visibility">
+      <arg name="visibility" type="uint"/>
+      <arg name="webos_seat" type="object" interface="wl_webos_seat" allow-null="true"/>
+    </event>
+  </interface>
+  <interface name="wl_webos_seat" version="1">
+    <request name="get_gyroscope">
+      <arg name="id" type="new_id" interface="wl_webos_gyroscope"/>
+    </request>
+    <request name="get_accelerometer">
+      <arg name="id" type="new_id" interface="wl_webos_accelerometer"/>
+    </request>
+    <event name="info">
+      <arg name="id" type="uint"/>
+      <arg name="name" type="string"/>
+      <arg name="designator" type="uint"/>
+      <arg name="capabilities" type="uint"/>
+    </event>
+  </interface>
+  <interface name="wl_webos_gyroscope" version="1">
+    <request name="request_data">
+      <arg name="enabled" type="uint"/>
+    </request>
+    <event name="sensor_data">
+      <arg name="x" type="fixed"/>
+      <arg name="y" type="fixed"/>
+      <arg name="z" type="fixed"/>
+    </event>
+  </interface>
+  <interface name="wl_webos_accelerometer" version="1">
+    <request name="request_data">
+      <arg name="enabled" type="uint"/>
+    </request>
+    <event name="sensor_data">
+      <arg name="x" type="fixed"/>
+      <arg name="y" type="fixed"/>
+      <arg name="z" type="fixed"/>
+    </event>
+  </interface>
+</protocol>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="webos_foreign">
+  <interface name="wl_webos_foreign" version="1">
+    <request name="destroy" type="destructor">
+    </request>
+    <request name="export_element">
+      <arg name="id" type="new_id" interface="wl_webos_exported"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+      <arg name="exported_type" type="uint"/>
+    </request>
+    <request name="import_element">
+      <arg name="id" type="new_id" interface="wl_webos_imported"/>
+      <arg name="window_id" type="string"/>
+      <arg name="exported_type" type="uint"/>
+    </request>
+  </interface>
+  <interface name="wl_webos_exported" version="1">
+    <request name="destroy" type="destructor">
+    </request>
+    <request name="set_exported_window">
+      <arg name="source_region" type="object" interface="wl_region"/>
+      <arg name="destination_region" type="object" interface="wl_region"/>
+    </request>
+    <request name="set_crop_region">
+      <arg name="original_input" type="object" interface="wl_region"/>
+      <arg name="source_region" type="object" interface="wl_region"/>
+      <arg name="destination_region" type="object" interface="wl_region"/>
+    </request>
+    <request name="set_property">
+      <arg name="name" type="string"/>
+      <arg name="value" type="string"/>
+    </request>
+    <event name="window_id_assigned">
+      <arg name="window_id" type="string"/>
+      <arg name="exported_type" type="uint"/>
+    </event>
+  </interface>
+  <interface name="wl_webos_imported" version="1">
+    <request name="set_surface_alignment">
+      <arg name="format" type="uint"/>
+    </request>
+    <request name="destroy" type="destructor">
+    </request>
+    <request name="attach_punchthrough">
+      <arg name="p0" type="string"/>
+    </request>
+    <request name="detach_punchthrough">
+    </request>
+    <request name="attach_surface">
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </request>
+    <request name="detach_surface">
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </request>
+    <request name="set_z_index">
+      <arg name="z_index" type="int"/>
+    </request>
+    <event name="destination_region_changed">
+      <arg name="width" type="uint"/>
+      <arg name="height" type="uint"/>
+    </event>
+    <event name="punchthrough_attached">
+      <arg name="context_id" type="string"/>
+    </event>
+    <event name="punchthrough_detached">
+      <arg name="context_id" type="string"/>
+    </event>
+    <event name="surface_attached">
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </event>
+    <event name="surface_detached">
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </event>
+  </interface>
+</protocol>

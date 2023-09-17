@@ -46,7 +46,7 @@
 #if SDL_VIDEO_DRIVER_WAYLAND_WEBOS
 #include "../../core/webos/SDL_webos_libs.h"
 #include "SDL_waylandwebos_cursor.h"
-#include "webos-client-protocol.h"
+#include "webos-input-manager-client-protocol.h"
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
 static int Wayland_SetRelativeMouseMode(SDL_bool enabled);

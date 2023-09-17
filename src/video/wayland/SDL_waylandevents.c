@@ -43,7 +43,7 @@
 #include "text-input-unstable-v3-client-protocol.h"
 #include "tablet-unstable-v2-client-protocol.h"
 #include "primary-selection-unstable-v1-client-protocol.h"
-#include "webos-client-protocol.h"
+#include "webos-input-manager-client-protocol.h"
 
 #ifdef HAVE_LIBDECOR_H
 #include <libdecor.h>
