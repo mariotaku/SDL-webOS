@@ -63,7 +63,6 @@
 #include "webos-shell-client-protocol.h"
 #include "webos-input-manager-client-protocol.h"
 #include "webos-foreign-client-protocol.h"
-#include "webos-surface-group-client-protocol.h"
 #include "text-client-protocol.h"
 #include "starfish-client-protocol.h"
 
@@ -956,6 +955,8 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
         d->starfish_pointer = wl_registry_bind(registry, id, &wl_starfish_pointer_interface, 1);
         wl_starfish_pointer_set_mrcu_standby_timer(d->starfish_pointer, device->webos_cursor_sleep_time);
     } else if (SDL_strcmp(interface, "text_model_factory") == 0) {
+        // Warning! Requests of text_model after set_content_type (5) has broken API.
+        // Get proper opcode at runtime when those calls are needed.
         d->text_model_factory = wl_registry_bind(registry, id, &text_model_factory_interface, 1);
 #endif
     }
