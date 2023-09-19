@@ -33,27 +33,6 @@
 #include "SDL_waylandwebos_foreign.h"
 #include "webos-shell-client-protocol.h"
 
-#ifndef WL_WEBOS_SHELL_SURFACE_STATE_ENUM
-#define WL_WEBOS_SHELL_SURFACE_STATE_ENUM
-/**
- * @ingroup iface_wl_webos_shell_surface
- * the state of the surface
- *
- * The state provides info to the client on how the compositor has placed
- * the surface.
- *
- * The default state will indicate to the client that it is windowed. The
- * "position_changed" event will tell the position in screen coordinates
- * when the surface is in this state.
- */
-enum wl_webos_shell_surface_state {
-    WL_WEBOS_SHELL_SURFACE_STATE_DEFAULT = 0,
-    WL_WEBOS_SHELL_SURFACE_STATE_MINIMIZED = 1,
-    WL_WEBOS_SHELL_SURFACE_STATE_MAXIMIZED = 2,
-    WL_WEBOS_SHELL_SURFACE_STATE_FULLSCREEN = 3,
-};
-#endif /* WL_WEBOS_SHELL_SURFACE_STATE_ENUM */
-
 static const char* webos_window_hints[] = {
     SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_BACK,
     SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_EXIT,
@@ -133,28 +112,28 @@ int WaylandWebOS_SetupSurface(_THIS, SDL_WindowData *data)
     if (appId == NULL) {
         return SDL_SetError("APPID environment variable is not set");
     }
-    wl_webos_shell_surface_add_listener(data->shell_surface.webos, &webos_shell_surface_listener, data);
-    wl_webos_shell_surface_set_property(data->shell_surface.webos, "appId", appId);
+    wl_webos_shell_surface_add_listener(data->shell_surface.webos.webos, &webos_shell_surface_listener, data);
+    wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "appId", appId);
     if (SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_BACK, SDL_FALSE)) {
-        wl_webos_shell_surface_set_property(data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_KEYS_BACK", "true");
+        wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_KEYS_BACK", "true");
     }
     if (SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_EXIT, SDL_FALSE)) {
-        wl_webos_shell_surface_set_property(data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_KEYS_EXIT", "true");
+        wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_KEYS_EXIT", "true");
     }
     if(SDL_GetHintBoolean(SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE, SDL_FALSE)) {
-        wl_webos_shell_surface_set_property(data->shell_surface.webos, "restore_cursor_position", "true");
+        wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "restore_cursor_position", "true");
     }
     if ((hintValue = SDL_GetHint(SDL_HINT_WEBOS_CURSOR_FREQUENCY)) != NULL) {
         if (SDL_strtol(hintValue, NULL, 10) > 0) {
-            wl_webos_shell_surface_set_property(data->shell_surface.webos, "cursor_fps", hintValue);
+            wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "cursor_fps", hintValue);
         }
     }
     if ((hintValue = SDL_GetHint(SDL_HINT_WEBOS_WINDOW_CLASS)) != NULL) {
         if (SDL_strncmp(hintValue, "1", 1) == 0) {
-            wl_webos_shell_surface_set_property(data->shell_surface.webos, "_WEBOS_WINDOW_CLASS", hintValue);
+            wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "_WEBOS_WINDOW_CLASS", hintValue);
         }
     }
-    wl_webos_shell_surface_set_property(data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_FORCESTRETCH", "true");
+    wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_FORCESTRETCH", "true");
     return 0;
 }
 
@@ -216,17 +195,17 @@ static void WindowHintsCallback(void *userdata, const char *name, const char *ol
         return;
     }
     if (SDL_strcmp(name, SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_BACK) == 0 ) {
-        wl_webos_shell_surface_set_property(win_data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_KEYS_BACK",
+        wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_KEYS_BACK",
                                             SDL_GetStringBoolean(newValue, SDL_FALSE) ? "true" : "false");
     } else if (SDL_strcmp(name, SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_EXIT) == 0) {
-        wl_webos_shell_surface_set_property(win_data->shell_surface.webos, "_WEBOS_ACCESS_POLICY_KEYS_EXIT",
+        wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_KEYS_EXIT",
                                             SDL_GetStringBoolean(newValue, SDL_FALSE) ? "true" : "false");
     } else if (SDL_strcmp(name, SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE) == 0) {
-        wl_webos_shell_surface_set_property(win_data->shell_surface.webos, "restore_cursor_position",
+        wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "restore_cursor_position",
                                             SDL_GetStringBoolean(newValue, SDL_FALSE) ? "true" : "false");
     } else if (SDL_strcmp(name, SDL_HINT_WEBOS_CURSOR_FREQUENCY) == 0) {
         if (SDL_strtol(newValue, NULL, 10) > 0) {
-            wl_webos_shell_surface_set_property(win_data->shell_surface.webos, "cursor_fps", newValue);
+            wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "cursor_fps", newValue);
         }
     } else if (SDL_strcmp(name, SDL_HINT_WEBOS_CURSOR_SLEEP_TIME) == 0) {
         if (newValue != NULL) {

@@ -1387,6 +1387,12 @@ void Wayland_ShowWindow(_THIS, SDL_Window *window)
             xdg_toplevel_set_app_id(data->shell_surface.xdg.roleobj.toplevel, c->classname);
             xdg_toplevel_add_listener(data->shell_surface.xdg.roleobj.toplevel, &toplevel_listener_xdg, data);
         }
+    } else if (c->shell.wl) {
+        if (window->flags & SDL_WINDOW_FULLSCREEN) {
+            wl_shell_surface_set_fullscreen(data->shell_surface.webos.wl, WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT, 0, NULL);
+        } else {
+            wl_shell_surface_set_toplevel(data->shell_surface.webos.wl);
+        }
     }
 
     /* Restore state that was set prior to this call */
@@ -1434,6 +1440,8 @@ void Wayland_ShowWindow(_THIS, SDL_Window *window)
 
         /* Set the geometry */
         xdg_surface_set_window_geometry(data->shell_surface.xdg.surface, 0, 0, data->window_width, data->window_height);
+    } else if (c->shell.wl) {
+        WAYLAND_wl_display_flush(c->display);
     } else {
         /* Nothing to see here, just commit. */
         wl_surface_commit(data->surface);
@@ -1638,6 +1646,8 @@ static void Wayland_activate_window(SDL_VideoData *data, SDL_WindowData *wind,
             xdg_activation_token_v1_set_serial(wind->activation_token, serial, seat);
         }
         xdg_activation_token_v1_commit(wind->activation_token);
+    } else if (wind->shell_surface.webos.webos) {
+        wl_webos_shell_surface_set_state(wind->shell_surface.webos.webos, 3);
     }
 }
 
@@ -2085,17 +2095,17 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH */
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
     if (c->shell.wl) {
-        data->shell_surface.wl = wl_shell_get_shell_surface(c->shell.wl, data->surface);
-        if (data->shell_surface.wl == NULL) {
+        data->shell_surface.webos.wl = wl_shell_get_shell_surface(c->shell.wl, data->surface);
+        if (data->shell_surface.webos.wl == NULL) {
             return SDL_SetError("Can't create shell surface");
         }
-        wl_shell_surface_set_class(data->shell_surface.wl, c->classname);
-        wl_shell_surface_set_toplevel(data->shell_surface.wl);
+        wl_shell_surface_set_class(data->shell_surface.webos.wl, c->classname);
+        wl_shell_surface_set_toplevel(data->shell_surface.webos.wl);
     }
     if (c->shell.webos) {
-        data->shell_surface.webos = wl_webos_shell_get_shell_surface(c->shell.webos, data->surface);
-        wl_webos_shell_surface_set_user_data(data->shell_surface.webos, data);
-        if (data->shell_surface.webos == NULL) {
+        data->shell_surface.webos.webos = wl_webos_shell_get_shell_surface(c->shell.webos, data->surface);
+        wl_webos_shell_surface_set_user_data(data->shell_surface.webos.webos, data);
+        if (data->shell_surface.webos.webos == NULL) {
             return SDL_SetError("Can't create webos shell surface");
         }
         WaylandWebOS_SetupSurface(_this, data);
@@ -2239,8 +2249,8 @@ void Wayland_SetWindowTitle(_THIS, SDL_Window *window)
     const char *title = window->title ? window->title : "";
 
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
-    if (wind->shell_surface.webos) {
-        wl_webos_shell_surface_set_property(wind->shell_surface.webos, "title", title);
+    if (wind->shell_surface.webos.webos) {
+        wl_webos_shell_surface_set_property(wind->shell_surface.webos.webos, "title", title);
     }
 #endif
 

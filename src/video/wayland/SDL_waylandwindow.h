@@ -67,9 +67,11 @@ typedef struct
             } roleobj;
             SDL_bool initial_configure_seen;
         } xdg;
-        struct wl_shell_surface *wl;
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
-        struct wl_webos_shell_surface *webos;
+        struct {
+            struct wl_shell_surface *wl;
+            struct wl_webos_shell_surface *webos;
+        } webos;
 #endif
     } shell_surface;
     enum
