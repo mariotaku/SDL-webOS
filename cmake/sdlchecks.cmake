@@ -624,14 +624,15 @@ macro(WaylandProtocolGen _SCANNER _CODE_MODE _XML _PROTL)
     set(_WAYLAND_PROT_H_CODE "${CMAKE_CURRENT_BINARY_DIR}/wayland-generated-protocols/${_PROTL}-client-protocol.h")
 
     set(_HEADER_EXTRA_DEPENDS "")
-    set(_HEADER_2ND_COMMAND "")
+    set(_HEADER_EXTRA_COMMANDS "")
 
     if(SDL_WAYLAND_WEBOS)
       get_filename_component(_XML_DIR "${_XML}" DIRECTORY)
       get_filename_component(_PATCH_NAME "${_WAYLAND_PROT_H_CODE}" NAME)
       set(_PATCH "${_XML_DIR}/webos-patches/${_PATCH_NAME}.awk")
       if (EXISTS "${_PATCH}")
-        set(_HEADER_2ND_COMMAND COMMAND "${GAWK}" ARGS "-i" "inplace" "-f" "${_PATCH}" "${_WAYLAND_PROT_H_CODE}")
+        set(_HEADER_EXTRA_COMMANDS COMMAND "${CMAKE_COMMAND}" ARGS "-E" "rename" "${_WAYLAND_PROT_H_CODE}" "${_WAYLAND_PROT_H_CODE}.orig"
+                COMMAND "${GAWK}" ARGS "-f" "${_PATCH}" "${_WAYLAND_PROT_H_CODE}.orig" > "${_WAYLAND_PROT_H_CODE}")
         set(_HEADER_EXTRA_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/wayland-generated-protocols/wayland-webos-abifix.h")
       endif()
     endif()
@@ -641,7 +642,7 @@ macro(WaylandProtocolGen _SCANNER _CODE_MODE _XML _PROTL)
         DEPENDS "${_XML}" ${_HEADER_EXTRA_DEPENDS}
         COMMAND "${_SCANNER}"
         ARGS client-header "${_XML}" "${_WAYLAND_PROT_H_CODE}"
-        ${_HEADER_2ND_COMMAND}
+        ${_HEADER_EXTRA_COMMANDS}
     )
 
     add_custom_command(
