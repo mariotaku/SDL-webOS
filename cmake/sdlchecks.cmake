@@ -623,11 +623,25 @@ macro(WaylandProtocolGen _SCANNER _CODE_MODE _XML _PROTL)
     set(_WAYLAND_PROT_C_CODE "${CMAKE_CURRENT_BINARY_DIR}/wayland-generated-protocols/${_PROTL}-protocol.c")
     set(_WAYLAND_PROT_H_CODE "${CMAKE_CURRENT_BINARY_DIR}/wayland-generated-protocols/${_PROTL}-client-protocol.h")
 
+    set(_HEADER_EXTRA_DEPENDS "")
+    set(_HEADER_2ND_COMMAND "")
+
+    if(SDL_WAYLAND_WEBOS)
+      get_filename_component(_XML_DIR "${_XML}" DIRECTORY)
+      get_filename_component(_PATCH_NAME "${_WAYLAND_PROT_H_CODE}" NAME)
+      set(_PATCH "${_XML_DIR}/webos-patches/${_PATCH_NAME}.awk")
+      if (EXISTS "${_PATCH}")
+        set(_HEADER_2ND_COMMAND COMMAND "${GAWK}" ARGS "-i" "inplace" "-f" "${_PATCH}" "${_WAYLAND_PROT_H_CODE}")
+        set(_HEADER_EXTRA_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/wayland-generated-protocols/wayland-webos-abifix.h")
+      endif()
+    endif()
+
     add_custom_command(
         OUTPUT "${_WAYLAND_PROT_H_CODE}"
-        DEPENDS "${_XML}"
+        DEPENDS "${_XML}" ${_HEADER_EXTRA_DEPENDS}
         COMMAND "${_SCANNER}"
         ARGS client-header "${_XML}" "${_WAYLAND_PROT_H_CODE}"
+        ${_HEADER_2ND_COMMAND}
     )
 
     add_custom_command(
@@ -689,6 +703,16 @@ macro(CheckWayland)
       file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/wayland-generated-protocols")
       target_include_directories(sdl-build-options INTERFACE "${CMAKE_CURRENT_BINARY_DIR}/wayland-generated-protocols")
 
+      if(SDL_WAYLAND_WEBOS)
+        set(HAVE_WAYLAND_WEBOS TRUE)
+        set(SDL_VIDEO_DRIVER_WAYLAND_WEBOS 1)
+        find_program(GAWK gawk REQUIRED)
+        set(_ABIFIX_SOURCE "${SDL2_SOURCE_DIR}/src/video/wayland/wayland-webos-abifix.h")
+        set(_ABIFIX_TARGET "${CMAKE_CURRENT_BINARY_DIR}/wayland-generated-protocols/wayland-webos-abifix.h")
+        add_custom_command(OUTPUT "${_ABIFIX_TARGET}"
+          COMMAND "${CMAKE_COMMAND}" ARGS "-E" "copy_if_different" "${_ABIFIX_SOURCE}" "${_ABIFIX_TARGET}")
+      endif()
+
       file(GLOB WAYLAND_PROTOCOLS_XML RELATIVE "${SDL2_SOURCE_DIR}/wayland-protocols/" "${SDL2_SOURCE_DIR}/wayland-protocols/*.xml")
       foreach(_XML ${WAYLAND_PROTOCOLS_XML})
         string(REGEX REPLACE "\\.xml$" "" _PROTL "${_XML}")
@@ -698,11 +722,6 @@ macro(CheckWayland)
       if(SDL_WAYLAND_QT_TOUCH)
           set(HAVE_WAYLAND_QT_TOUCH TRUE)
           set(SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH 1)
-      endif()
-
-      if(SDL_WAYLAND_WEBOS)
-          set(HAVE_WAYLAND_WEBOS TRUE)
-          set(SDL_VIDEO_DRIVER_WAYLAND_WEBOS 1)
       endif()
 
       if(SDL_WAYLAND_SHARED AND NOT HAVE_SDL_LOADSO)

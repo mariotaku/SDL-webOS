@@ -652,6 +652,9 @@ static SDL_bool WaylandWebOS_SetCursorVisibility(SDL_bool visible)
         return SDL_FALSE;
     }
 
+    if (WL_WEBOS_INPUT_MANAGER_SET_CURSOR_VISIBILITY == -1) {
+        return SDL_FALSE;
+    }
     wl_webos_input_manager_set_cursor_visibility(data->webos_input_manager, visible);
 
     return SDL_TRUE;
