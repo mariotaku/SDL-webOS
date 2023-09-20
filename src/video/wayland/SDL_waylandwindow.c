@@ -1328,8 +1328,11 @@ void Wayland_ShowWindow(_THIS, SDL_Window *window)
      *
      * -flibit
      */
+    // On webOS 1, detaching the buffer will cause eglSwapBuffers to hang forever.
+#if !SDL_VIDEO_DRIVER_WAYLAND_WEBOS
     wl_surface_attach(data->surface, NULL, 0, 0);
     wl_surface_commit(data->surface);
+#endif
 
     /* Create the shell surface and map the toplevel/popup */
 #ifdef HAVE_LIBDECOR_H
@@ -1647,7 +1650,7 @@ static void Wayland_activate_window(SDL_VideoData *data, SDL_WindowData *wind,
         }
         xdg_activation_token_v1_commit(wind->activation_token);
     } else if (wind->shell_surface.webos.webos) {
-        wl_webos_shell_surface_set_state(wind->shell_surface.webos.webos, 3);
+        wl_webos_shell_surface_set_state(wind->shell_surface.webos.webos, WL_WEBOS_SHELL_SURFACE_STATE_FULLSCREEN);
     }
 }
 
@@ -2081,8 +2084,8 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
     }
 
     /* Fire a callback when the compositor wants a new frame to set the surface damage region. */
-    data->surface_damage_frame_callback = wl_surface_frame(data->surface);
-    wl_callback_add_listener(data->surface_damage_frame_callback, &surface_damage_frame_listener, data);
+//    data->surface_damage_frame_callback = wl_surface_frame(data->surface);
+//    wl_callback_add_listener(data->surface_damage_frame_callback, &surface_damage_frame_listener, data);
 
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH
     if (c->surface_extension) {
