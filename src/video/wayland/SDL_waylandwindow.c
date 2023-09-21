@@ -1574,6 +1574,18 @@ void Wayland_HideWindow(_THIS, SDL_Window *window)
             wind->shell_surface.xdg.surface = NULL;
         }
     }
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+        else if (data->shell.wl) {
+        if (wind->shell_surface.webos.webos) {
+            wl_webos_shell_surface_destroy(wind->shell_surface.webos.webos);
+            wind->shell_surface.webos.webos = NULL;
+        }
+        if (wind->shell_surface.webos.wl) {
+            wl_shell_surface_destroy(wind->shell_surface.webos.wl);
+            wind->shell_surface.webos.wl = NULL;
+        }
+    }
+#endif
 
     /*
      * Roundtrip required to avoid a possible protocol violation when
