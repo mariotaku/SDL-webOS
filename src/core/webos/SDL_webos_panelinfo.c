@@ -28,8 +28,14 @@ SDL_bool SDL_webOSGetPanelResolution(int *width, int *height) {
         jdomparser_ref parser = NULL;
         jvalue_ref parsed;
         if ((parsed = SDL_webOSJsonParse(response, &parser, 1)) != NULL) {
-            int uhd = 0;
-            PBNJSON_jboolean_get(PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("UHD")), &uhd);
+            jvalue_ref uhd = PBNJSON_jobject_get(parsed, J_CSTR_TO_BUF("UHD"));
+            int is_uhd = 0;
+            if (PBNJSON_jis_string(uhd)) {
+                raw_buffer uhd_buf = PBNJSON_jstring_get_fast(uhd);
+                is_uhd = SDL_strncmp(uhd_buf.m_str, "true", uhd_buf.m_len) == 0;
+            } else {
+                PBNJSON_jboolean_get(uhd, &is_uhd);
+            }
             if (uhd) {
                 *width = 3840;
                 *height = 2160;
