@@ -36,7 +36,7 @@ SDL_bool SDL_webOSGetPanelResolution(int *width, int *height) {
             } else {
                 PBNJSON_jboolean_get(uhd, &is_uhd);
             }
-            if (uhd) {
+            if (is_uhd) {
                 *width = 3840;
                 *height = 2160;
             } else {
