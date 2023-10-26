@@ -2100,6 +2100,19 @@ SDL_bool SDL_ShouldIgnoreGameController(const char *name, SDL_JoystickGUID guid)
 
     SDL_GetJoystickGUIDInfo(guid, &vendor, &product, &version, NULL);
 
+#if defined(__WEBOS__)
+    if (guid.data[0] == 0x06 && vendor == 0x9999 && product == 0x9999) {
+        /*
+         * Following devices in webOS should be ignored:
+         * - Smart Remote RCU Input
+         * - LGE Network Input
+         *
+         * These devices have vendor and product IDs set to 0x9999, and their bus type is 0x06 (BUS_VIRTUAL).
+         */
+        return SDL_TRUE;
+    }
+#endif
+
     if (SDL_GetHintBoolean("SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD", SDL_FALSE)) {
         /* We shouldn't ignore Steam's virtual gamepad since it's using the hints to filter out the real controllers so it can remap input for the virtual controller */
         /* https://partner.steamgames.com/doc/features/steam_controller/steam_input_gamepad_emulation_bestpractices */
