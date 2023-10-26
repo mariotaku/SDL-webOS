@@ -2789,6 +2789,11 @@ SDL_bool SDL_ShouldIgnoreJoystick(const char *name, SDL_JoystickGUID guid)
         MAKE_VIDPID(0x1532, 0x0282), /* Razer Huntsman Mini Analog, non-functional DInput device */
         MAKE_VIDPID(0x26ce, 0x01a2), /* ASRock LED Controller */
         MAKE_VIDPID(0x20d6, 0x0002), /* PowerA Enhanced Wireless Controller for Nintendo Switch (charging port only) */
+#ifdef __WEBOS__
+        /* Smart Remote RCU Input */
+        /* LGE Network Input */
+        MAKE_VIDPID(0x9999, 0x9999),
+#endif
     };
 
     static Uint32 rog_chakram_list[] = {
