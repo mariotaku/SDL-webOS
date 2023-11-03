@@ -665,11 +665,22 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 					break;
 
 				case BUS_BLUETOOTH:
-					/* Manufacturer and Product strings */
-					cur_dev->manufacturer_string = wcsdup(L"");
-					cur_dev->product_string = utf8_to_wchar_t(product_name_utf8);
+					/* webOS doesn't handle bluetooth HID device as expected, so skip enumerating them */
+                    /* Free this device */
+                    free(cur_dev->serial_number);
+                    free(cur_dev->path);
+                    free(cur_dev);
 
-					break;
+                    /* Take it off the device list. */
+                    if (prev_dev) {
+                        prev_dev->next = NULL;
+                        cur_dev = prev_dev;
+                    }
+                    else {
+                        cur_dev = root = NULL;
+                    }
+
+                    goto next;
 
 				default:
 					/* Unknown device type - this should never happen, as we
