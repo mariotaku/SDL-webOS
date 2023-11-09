@@ -20,6 +20,8 @@
 */
 #include "../../SDL_internal.h"
 
+#ifdef __WEBOS__
+
 #ifndef SDL_webos_libs_h_
 #define SDL_webos_libs_h_
 
@@ -47,6 +49,8 @@ extern void SDL_webOSUnloadLibraries();
 #include "SDL_webos_pbnjson_sym.h"
 #include "SDL_webos_pbnjson_inlines.h"
 
-#endif // SDL_webos_libs_h_
+#endif /* SDL_webos_libs_h_ */
+
+#endif /* __WEBOS__ */
 
 /* vi: set ts=4 sw=4 expandtab: */

@@ -20,6 +20,8 @@
 */
 #include "../../SDL_internal.h"
 
+#if __WEBOS__
+
 #ifndef SDL_webos_json_h_
 #define SDL_webos_json_h_
 
@@ -31,6 +33,8 @@ extern const char* SDL_webOSJsonStringify(jvalue_ref value);
 
 extern jvalue_ref PBNJSON_jobject_get_nested(jvalue_ref obj, ...);
 
-#endif // SDL_webos_json_h_
+#endif /* SDL_webos_json_h_ */
+
+#endif /* __WEBOS__ */
 
 /* vi: set ts=4 sw=4 expandtab: */

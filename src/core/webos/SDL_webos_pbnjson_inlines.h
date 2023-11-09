@@ -21,6 +21,8 @@
 
 #include <assert.h>
 
+#ifdef __WEBOS__
+
 #ifndef SDL_webos_pbnjson_inlines_h_
 #define SDL_webos_pbnjson_inlines_h_
 
@@ -130,6 +132,8 @@ static inline int PBNJSON_jobject_containskey(jvalue_ref obj, raw_buffer key)
     return PBNJSON_jobject_get_exists(obj, key, NULL);
 }
 
-#endif // SDL_webos_pbnjson_inlines_h_
+#endif /* SDL_webos_pbnjson_inlines_h_ */
+
+#endif /* __WEBOS__ */
 
 /* vi: set ts=4 sw=4 expandtab: */

@@ -1,0 +1,33 @@
+name: Build (webOS)
+
+on: [push, pull_request]
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download webOS NDK
+        uses: robinraju/release-downloader@v1.8
+        with:
+          repository: "openlgtv/buildroot-nc4"
+          latest: true
+          fileName: "arm-webos-linux-gnueabi_sdk-buildroot.tar.gz"
+          out-file-path: "/tmp"
+
+      - name: Extract webOS NDK
+        working-directory: /tmp
+        run: |
+          tar xzf arm-webos-linux-gnueabi_sdk-buildroot.tar.gz
+          ./arm-webos-linux-gnueabi_sdk-buildroot/relocate-sdk.sh
+
+      - name: Configure (CMake)
+        run: cmake -B build \
+          -DCMAKE_TOOLCHAIN_FILE=/tmp/arm-webos-linux-gnueabi_sdk-buildroot/share/buildroot/toolchainfile.cmake \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DWEBOS=ON
+
+      - name: Build (CMake)
+        run: cmake --build build/ --config Release --verbose --parallel

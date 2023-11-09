@@ -20,6 +20,8 @@
 */
 #include "../../SDL_internal.h"
 
+#ifdef __WEBOS__
+
 #ifndef SDL_webos_luna_h_
 #define SDL_webos_luna_h_
 #include "SDL_stdinc.h"
@@ -28,6 +30,8 @@ extern SDL_bool SDL_webOSLunaServiceJustCall(const char* uri, const char* payloa
 
 extern SDL_bool SDL_webOSLunaServiceCallSync(const char *uri, const char *payload, int pub, char **output);
 
-#endif // SDL_webos_luna_h_
+#endif /* SDL_webos_luna_h_ */
+
+#endif /* __WEBOS__ */
 
 /* vi: set ts=4 sw=4 expandtab: */

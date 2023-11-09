@@ -20,6 +20,8 @@
 */
 #include "../../SDL_internal.h"
 
+#ifdef __WEBOS__
+
 #ifndef SDL_webos_init_h_
 #define SDL_webos_init_h_
 
@@ -31,6 +33,8 @@ extern int SDL_webOSRegisterApp();
 
 extern void SDL_webOSUnregisterApp();
 
-#endif // SDL_webos_init_h_
+#endif /* SDL_webos_init_h_ */
+
+#endif /* __WEBOS__ */
 
 /* vi: set ts=4 sw=4 expandtab: */
