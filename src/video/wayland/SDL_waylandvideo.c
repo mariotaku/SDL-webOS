@@ -1043,7 +1043,9 @@ int Wayland_VideoInit(_THIS)
     // Second roundtrip to receive all output events.
     WAYLAND_wl_display_roundtrip(data->display);
 
+#if SDL_VIDEO_DRIVER_WAYLAND_WEBOS
     WaylandWebOS_VideoInit(_this);
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
     Wayland_InitMouse();
 
@@ -1095,7 +1097,9 @@ static void Wayland_VideoCleanup(_THIS)
     Wayland_QuitWin(data);
     Wayland_FiniMouse(data);
 
+#if SDL_VIDEO_DRIVER_WAYLAND_WEBOS
     WaylandWebOS_VideoCleanUp(_this);
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
     for (i = _this->num_displays - 1; i >= 0; --i) {
         SDL_VideoDisplay *display = &_this->displays[i];

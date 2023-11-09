@@ -738,7 +738,9 @@ void Wayland_InitMouse(void)
     mouse->WarpMouse = Wayland_WarpMouse;
     mouse->WarpMouseGlobal = Wayland_WarpMouseGlobal;
     mouse->SetRelativeMouseMode = Wayland_SetRelativeMouseMode;
+#if SDL_VIDEO_DRIVER_WAYLAND_WEBOS
     mouse->WebOSSetCursorVisibility = WaylandWebOS_SetCursorVisibility;
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
     input->relative_mode_override = SDL_FALSE;
     input->cursor_visible = SDL_TRUE;

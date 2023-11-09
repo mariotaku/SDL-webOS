@@ -1390,13 +1390,16 @@ void Wayland_ShowWindow(_THIS, SDL_Window *window)
             xdg_toplevel_set_app_id(data->shell_surface.xdg.roleobj.toplevel, c->classname);
             xdg_toplevel_add_listener(data->shell_surface.xdg.roleobj.toplevel, &toplevel_listener_xdg, data);
         }
-    } else if (c->shell.wl) {
+    }
+#if SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    else if (c->shell.wl) {
         if (window->flags & SDL_WINDOW_FULLSCREEN) {
             wl_shell_surface_set_fullscreen(data->shell_surface.webos.wl, WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT, 0, NULL);
         } else {
             wl_shell_surface_set_toplevel(data->shell_surface.webos.wl);
         }
     }
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
     /* Restore state that was set prior to this call */
     Wayland_SetWindowTitle(_this, window);
@@ -1661,9 +1664,12 @@ static void Wayland_activate_window(SDL_VideoData *data, SDL_WindowData *wind,
             xdg_activation_token_v1_set_serial(wind->activation_token, serial, seat);
         }
         xdg_activation_token_v1_commit(wind->activation_token);
-    } else if (wind->shell_surface.webos.webos) {
+    }
+#if SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    else if (wind->shell_surface.webos.webos) {
         wl_webos_shell_surface_set_state(wind->shell_surface.webos.webos, WL_WEBOS_SHELL_SURFACE_STATE_FULLSCREEN);
     }
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 }
 
 void Wayland_RaiseWindow(_THIS, SDL_Window *window)
