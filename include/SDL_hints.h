@@ -2473,6 +2473,14 @@ extern "C" {
  * \brief A variable that decides whether to disable cursor calibration.
  */
 #define SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE "SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE"
+/**
+ * \brief A variable that decides whether to let SDL handle input from game controllers.
+ *
+ * Since webOS 8.3.0, input from game controllers is mapped to navigation / volume control keys by default.
+ * This change is useful, but can cause doubled input. SDL disables this behavior by default to let developers
+ * handle game controller input by themselves. But the behavior can be disabled by setting this hint to "false".
+ */
+#define SDL_HINT_WEBOS_CLOUDGAME_ACTIVE "SDL_HINT_WEBOS_CLOUDGAME_ACTIVE"
 
 /**
  *  \brief  An enumeration of hint priorities

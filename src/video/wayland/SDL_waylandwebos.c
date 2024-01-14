@@ -123,6 +123,9 @@ int WaylandWebOS_SetupSurface(_THIS, SDL_WindowData *data)
     if(SDL_GetHintBoolean(SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE, SDL_FALSE)) {
         wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "restore_cursor_position", "true");
     }
+    if(SDL_GetHintBoolean(SDL_HINT_WEBOS_CLOUDGAME_ACTIVE, SDL_TRUE)) {
+        wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "cloudgame_active", "true");
+    }
     if ((hintValue = SDL_GetHint(SDL_HINT_WEBOS_CURSOR_FREQUENCY)) != NULL) {
         if (SDL_strtol(hintValue, NULL, 10) > 0) {
             wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "cursor_fps", hintValue);
@@ -203,6 +206,9 @@ static void WindowHintsCallback(void *userdata, const char *name, const char *ol
     } else if (SDL_strcmp(name, SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE) == 0) {
         wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "restore_cursor_position",
                                             SDL_GetStringBoolean(newValue, SDL_FALSE) ? "true" : "false");
+    } else if (SDL_strcmp(name, SDL_HINT_WEBOS_CLOUDGAME_ACTIVE) == 0) {
+        wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "cloudgame_active",
+                                            SDL_GetStringBoolean(newValue, SDL_TRUE) ? "true" : "false");
     } else if (SDL_strcmp(name, SDL_HINT_WEBOS_CURSOR_FREQUENCY) == 0) {
         if (SDL_strtol(newValue, NULL, 10) > 0) {
             wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "cursor_fps", newValue);
