@@ -24,11 +24,10 @@ jobs:
           ./arm-webos-linux-gnueabi_sdk-buildroot/relocate-sdk.sh
 
       - name: Configure (CMake)
-        run: cmake \
-          -DCMAKE_TOOLCHAIN_FILE=/tmp/arm-webos-linux-gnueabi_sdk-buildroot/share/buildroot/toolchainfile.cmake \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DWEBOS=ON \
-          -B build -S .
+        run: |
+          cmake -B build -S . \
+            -DCMAKE_TOOLCHAIN_FILE=/tmp/arm-webos-linux-gnueabi_sdk-buildroot/share/buildroot/toolchainfile.cmake \
+            -DCMAKE_BUILD_TYPE=Release -DWEBOS=ON
 
       - name: Build (CMake)
         run: cmake --build build/ --config Release --verbose --parallel
