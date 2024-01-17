@@ -2460,19 +2460,19 @@ extern "C" {
 /**
  * \brief A variable that decides whether to send Luna calls to register the app automatically.
  */
-#define SDL_HINT_WEBOS_REGISTER_APP "SDL_HINT_WEBOS_REGISTER_APP"
+#define SDL_HINT_WEBOS_REGISTER_APP "SDL_WEBOS_REGISTER_APP"
 /**
  * \brief A variable that decides the window class.
  */
-#define SDL_HINT_WEBOS_WINDOW_CLASS "SDL_HINT_WEBOS_WINDOW_CLASS"
+#define SDL_HINT_WEBOS_WINDOW_CLASS "SDL_WEBOS_WINDOW_CLASS"
 /**
  * \brief A variable that decides update frequency of the cursor in second.
  */
-#define SDL_HINT_WEBOS_CURSOR_FREQUENCY "SDL_HINT_WEBOS_CURSOR_FREQUENCY"
+#define SDL_HINT_WEBOS_CURSOR_FREQUENCY "SDL_WEBOS_CURSOR_FREQUENCY"
 /**
  * \brief A variable that decides whether to disable cursor calibration.
  */
-#define SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE "SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE"
+#define SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE "SDL_WEBOS_CURSOR_CALIBRATION_DISABLE"
 /**
  * \brief A variable that decides whether to let SDL handle input from game controllers.
  *
@@ -2480,7 +2480,8 @@ extern "C" {
  * This change is useful, but can cause doubled input. SDL disables this behavior by default to let developers
  * handle game controller input by themselves. But the behavior can be disabled by setting this hint to "false".
  */
-#define SDL_HINT_WEBOS_CLOUDGAME_ACTIVE "SDL_HINT_WEBOS_CLOUDGAME_ACTIVE"
+#define SDL_HINT_WEBOS_CLOUDGAME_ACTIVE "SDL_WEBOS_CLOUDGAME_ACTIVE"
+#define SDL_HINT_WEBOS_HIDAPI_IGNORE_BLUETOOTH_DEVICES  "SDL_EBOS_HIDAPI_IGNORE_BLUETOOTH_DEVICES"
 
 /**
  *  \brief  An enumeration of hint priorities

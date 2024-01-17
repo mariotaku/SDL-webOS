@@ -665,23 +665,35 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 					break;
 
 				case BUS_BLUETOOTH:
-					/* webOS doesn't handle bluetooth HID device as expected, so skip enumerating them */
-                    /* Free this device */
-                    free(cur_dev->serial_number);
-                    free(cur_dev->path);
-                    free(cur_dev);
+                    hint = SDL_GetHint(SDL_HINT_WEBOS_HIDAPI_IGNORE_BLUETOOTH_DEVICES);
+                    /* See if there are any devices we should skip in enumeration */
+                    if (hint) {
+                        char vendor_match[16], product_match[16];
+                        SDL_snprintf(vendor_match, sizeof(vendor_match), "0x%.4x/0x0000", dev_vid);
+                        SDL_snprintf(product_match, sizeof(product_match), "0x%.4x/0x%.4x", dev_vid, dev_pid);
+                        if (SDL_strcasestr(hint, vendor_match) || SDL_strcasestr(hint, product_match)) {
+                            /* Free this device */
+                            free(cur_dev->serial_number);
+                            free(cur_dev->path);
+                            free(cur_dev);
 
-                    /* Take it off the device list. */
-                    if (prev_dev) {
-                        prev_dev->next = NULL;
-                        cur_dev = prev_dev;
+                            /* Take it off the device list. */
+                            if (prev_dev) {
+                                prev_dev->next = NULL;
+                                cur_dev = prev_dev;
+                            }
+                            else {
+                                cur_dev = root = NULL;
+                            }
+
+                            goto next;
+                        }
                     }
-                    else {
-                        cur_dev = root = NULL;
-                    }
+                    /* Manufacturer and Product strings */
+                    cur_dev->manufacturer_string = wcsdup(L"");
+                    cur_dev->product_string = utf8_to_wchar_t(product_name_utf8);
 
-                    goto next;
-
+                    break;
 				default:
 					/* Unknown device type - this should never happen, as we
 					 * check for USB and Bluetooth devices above */
