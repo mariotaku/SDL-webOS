@@ -14,6 +14,7 @@
 static SDL_bool s_appRegistered = SDL_FALSE;
 static int s_nativeLifeCycleInterfaceVersion = 0;
 static LSHandle *s_LSHandle = NULL;
+static SDL_webOSPowerState s_powerState = SDL_WEBOS_POWER_STATE_UNKNOWN;
 
 static int getNativeLifeCycleInterfaceVersion(const char *appId);
 
@@ -24,12 +25,22 @@ static int lifecycleCallbackVersion2(LSHandle *sh, LSMessage *reply, HContext *c
 static SDL_bool registerScreenSaverRequest(const char *appId);
 static int screenSaverRequestCallback(LSHandle *sh, LSMessage *reply, HContext *ctx);
 
+static SDL_bool registerPowerState();
+static int powerStateCallback(LSHandle *sh, LSMessage *reply, HContext *ctx);
+
+static SDL_bool turnOnScreen();
+
 static HContext s_AppLifecycleContext = {
     .multiple = 1,
     .pub = 1,
 };
 
 static HContext s_ScreenSaverRequestContext = {
+    .multiple = 1,
+    .pub = 1,
+};
+
+static HContext s_PowerStateContext = {
     .multiple = 1,
     .pub = 1,
 };
@@ -69,6 +80,9 @@ int SDL_webOSRegisterApp()
         if (!registerScreenSaverRequest(appId)) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Failed to register screen saver request");
         }
+        if (!registerPowerState()) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Failed to register power state");
+        }
     }
     s_appRegistered = SDL_TRUE;
     return 0;
@@ -91,7 +105,26 @@ void SDL_webOSUnregisterApp()
         }
         s_ScreenSaverRequestContext.callback = NULL;
     }
+    if (s_PowerStateContext.callback != NULL) {
+        HELPERS_HUnregisterServiceCallback(&s_PowerStateContext);
+        s_PowerStateContext.callback = NULL;
+    }
     s_appRegistered = SDL_FALSE;
+}
+
+SDL_webOSPowerState SDL_webOSGetPowerState()
+{
+    return s_powerState;
+}
+
+void SDL_webOSTurnOnScreen()
+{
+    if (s_powerState == SDL_WEBOS_POWER_STATE_ACTIVE) {
+        return;
+    }
+    if (!turnOnScreen()) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Failed to turn on screen");
+    }
 }
 
 int getNativeLifeCycleInterfaceVersion(const char *appId)
@@ -255,6 +288,50 @@ static int screenSaverRequestCallback(LSHandle *sh, LSMessage *reply, HContext *
     PBNJSON_j_release(&response);
     PBNJSON_jdomparser_release(&parser);
     return 1;
+}
+
+static SDL_bool registerPowerState()
+{
+    s_PowerStateContext.callback = powerStateCallback;
+    return HELPERS_HLunaServiceCall("luna://com.webos.service.tvpower/power/getPowerState", "{\"subscribe\":true}",
+                                    &s_PowerStateContext) == 0;
+}
+
+static int powerStateCallback(LSHandle *sh, LSMessage *reply, HContext *ctx)
+{
+    jdomparser_ref parser = NULL;
+    jvalue_ref parsed = NULL;
+    jvalue_ref state = NULL;
+    if ((parsed = SDL_webOSJsonParse(HELPERS_HLunaServiceMessage(reply), &parser, 1)) == NULL) {
+        return 0;
+    }
+    if (PBNJSON_jobject_get_exists(parsed, J_CSTR_TO_BUF("state"), &state)) {
+        raw_buffer state_buf = PBNJSON_jstring_get_fast(state);
+        if (state_buf.m_str) {
+            if (SDL_strncmp(state_buf.m_str, "Active", state_buf.m_len) == 0) {
+                s_powerState = SDL_WEBOS_POWER_STATE_ACTIVE;
+            } else if (SDL_strncmp(state_buf.m_str, "Screen Saver", state_buf.m_len) == 0) {
+                s_powerState = SDL_WEBOS_POWER_STATE_SCREEN_SAVER;
+            } else if (SDL_strncmp(state_buf.m_str, "Screen Off", state_buf.m_len) == 0) {
+                s_powerState = SDL_WEBOS_POWER_STATE_POWER_OFF;
+            } else {
+                s_powerState = SDL_WEBOS_POWER_STATE_UNKNOWN;
+            }
+        }
+    }
+    PBNJSON_jdomparser_release(&parser);
+    return 1;
+}
+
+static SDL_bool turnOnScreen()
+{
+    char *output = NULL;
+    if (!SDL_webOSLunaServiceCallSync("luna://com.webos.service.tvpower/power/turnOnScreen", "{}", 1, &output)) {
+        SDL_SetError("Failed to call luna://com.webos.service.tvpower/power/turnOnScreen");
+        return SDL_FALSE;
+    }
+    free(output);
+    return SDL_TRUE;
 }
 
 #endif // __WEBOS__

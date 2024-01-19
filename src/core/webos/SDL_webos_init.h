@@ -25,6 +25,14 @@
 #ifndef SDL_webos_init_h_
 #define SDL_webos_init_h_
 
+typedef enum SDL_webOSPowerState
+{
+    SDL_WEBOS_POWER_STATE_UNKNOWN,
+    SDL_WEBOS_POWER_STATE_ACTIVE,
+    SDL_WEBOS_POWER_STATE_POWER_OFF,
+    SDL_WEBOS_POWER_STATE_SCREEN_SAVER,
+} SDL_webOSPowerState;
+
 extern void SDL_webOSInitLSHandle();
 
 extern SDL_bool SDL_webOSAppRegistered();
@@ -32,6 +40,10 @@ extern SDL_bool SDL_webOSAppRegistered();
 extern int SDL_webOSRegisterApp();
 
 extern void SDL_webOSUnregisterApp();
+
+extern SDL_webOSPowerState SDL_webOSGetPowerState();
+
+extern void SDL_webOSTurnOnScreen();
 
 #endif /* SDL_webos_init_h_ */
 
