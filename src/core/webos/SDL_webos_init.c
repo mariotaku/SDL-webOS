@@ -40,7 +40,8 @@ SDL_bool SDL_webOSSetLSHandle(LSHandle *handle)
     return HELPERS_HNDLSetLSHandle != NULL;
 }
 
-void SDL_webOSInitLSHandle(){
+void SDL_webOSInitLSHandle()
+{
     if (HELPERS_HNDLSetLSHandle != NULL && s_LSHandle != NULL) {
         HELPERS_HNDLSetLSHandle(s_LSHandle);
     }
@@ -110,7 +111,7 @@ int getNativeLifeCycleInterfaceVersion(const char *appId)
     }
     parsed = SDL_webOSJsonParse(output, &parser, 1);
     if (parsed == NULL) {
-        SDL_free(output);
+        free(output);
         return SDL_SetError("Failed to parse output of luna://com.webos.applicationManager/getAppInfo");
     }
 
@@ -123,6 +124,7 @@ int getNativeLifeCycleInterfaceVersion(const char *appId)
         version = 1;
     }
     PBNJSON_jdomparser_release(&parser);
+    free(output);
     return version;
 }
 

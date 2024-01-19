@@ -34,7 +34,7 @@ char WaylandWebOS_GetCursorSize()
         }
         PBNJSON_jdomparser_release(&parser);
     }
-    SDL_free(response);
+    free(response);
     return size;
 }
 
