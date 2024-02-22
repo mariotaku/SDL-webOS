@@ -22,10 +22,10 @@
 
 #include "../../include/SDL_scancode.h"
 
-#if SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+#ifdef __WEBOS__
 
 extern SDL_Scancode SDL_GetWebOSScancode(int keycode);
 
-#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
+#endif /* __WEBOS__ */
 
 /* vi: set ts=4 sw=4 expandtab: */

@@ -20,7 +20,7 @@
 */
 #include "../SDL_internal.h"
 
-#if SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+#ifdef __WEBOS__
 #include "SDL_scancode_webos_c.h"
 
 SDL_Scancode SDL_GetWebOSScancode(int keycode)
@@ -58,6 +58,6 @@ SDL_Scancode SDL_GetWebOSScancode(int keycode)
     return SDL_SCANCODE_UNKNOWN;
 }
 
-#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
+#endif /* __WEBOS__ */
 
 /* vi: set ts=4 sw=4 expandtab: */
