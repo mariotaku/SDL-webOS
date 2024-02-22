@@ -38,6 +38,10 @@
 #include "SDL_waylandclipboard.h"
 #include "SDL_waylandvulkan.h"
 #include "SDL_waylandmessagebox.h"
+#include "SDL_waylandwebos.h"
+#include "SDL_waylandwebos_foreign.h"
+#include "SDL_waylandwebos_osk.h"
+#include "SDL_waylandwebos_abifix.h"
 #include "SDL_hints.h"
 
 #include <sys/types.h>
@@ -58,6 +62,11 @@
 #include "viewporter-client-protocol.h"
 #include "primary-selection-unstable-v1-client-protocol.h"
 #include "fractional-scale-v1-client-protocol.h"
+#include "webos-shell-client-protocol.h"
+#include "webos-input-manager-client-protocol.h"
+#include "webos-foreign-client-protocol.h"
+#include "text-client-protocol.h"
+#include "starfish-client-protocol.h"
 
 #ifdef HAVE_LIBDECOR_H
 #include <libdecor.h>
@@ -130,6 +139,8 @@ static char *get_classname()
     return SDL_strdup("SDL_App");
 }
 
+#if SDL_WAYLAND_CHECK_VERSION(1, 17, 90)
+
 static const char *SDL_WAYLAND_surface_tag = "sdl-window";
 static const char *SDL_WAYLAND_output_tag = "sdl-output";
 
@@ -152,6 +163,30 @@ SDL_bool SDL_WAYLAND_own_output(struct wl_output *output)
 {
     return wl_proxy_get_tag((struct wl_proxy *)output) == &SDL_WAYLAND_output_tag;
 }
+#else
+
+void SDL_WAYLAND_register_surface(struct wl_surface *surface)
+{
+    (void)surface;
+}
+
+void SDL_WAYLAND_register_output(struct wl_output *output)
+{
+    (void)output;
+}
+
+SDL_bool SDL_WAYLAND_own_surface(struct wl_surface *surface)
+{
+    (void)surface;
+    return SDL_TRUE;
+}
+
+SDL_bool SDL_WAYLAND_own_output(struct wl_output *output)
+{
+    (void)output;
+    return SDL_TRUE;
+}
+#endif
 
 static void Wayland_DeleteDevice(SDL_VideoDevice *device)
 {
@@ -242,7 +277,9 @@ static SDL_VideoDevice *Wayland_CreateDevice(void)
     device->SuspendScreenSaver = Wayland_SuspendScreenSaver;
 
     device->PumpEvents = Wayland_PumpEvents;
-    device->WaitEventTimeout = Wayland_WaitEventTimeout;
+    if (WAYLAND_wl_display_read_events) {
+        device->WaitEventTimeout = Wayland_WaitEventTimeout;
+    }
     device->SendWakeupEvent = Wayland_SendWakeupEvent;
 
 #ifdef SDL_VIDEO_OPENGL_EGL
@@ -279,7 +316,14 @@ static SDL_VideoDevice *Wayland_CreateDevice(void)
     device->DestroyWindow = Wayland_DestroyWindow;
     device->SetWindowHitTest = Wayland_SetWindowHitTest;
     device->FlashWindow = Wayland_FlashWindow;
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    device->HasScreenKeyboardSupport = WaylandWebOS_HasScreenKeyboardSupport;
+    device->ShowScreenKeyboard = WaylandWebOS_ShowScreenKeyboard;
+    device->HideScreenKeyboard = WaylandWebOS_HideScreenKeyboard;
+    device->IsScreenKeyboardShown = WaylandWebOS_IsScreenKeyboardShown;
+#else
     device->HasScreenKeyboardSupport = Wayland_HasScreenKeyboardSupport;
+#endif
 
     device->SetClipboardText = Wayland_SetClipboardText;
     device->GetClipboardText = Wayland_GetClipboardText;
@@ -296,6 +340,14 @@ static SDL_VideoDevice *Wayland_CreateDevice(void)
     device->Vulkan_UnloadLibrary = Wayland_Vulkan_UnloadLibrary;
     device->Vulkan_GetInstanceExtensions = Wayland_Vulkan_GetInstanceExtensions;
     device->Vulkan_CreateSurface = Wayland_Vulkan_CreateSurface;
+#endif
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    device->WebOSCreateExportedWindow = WaylandWebOS_CreateExportedWindow;
+    device->WebOSSetExportedWindow = WaylandWebOS_SetExportedWindow;
+    device->WebOSExportedSetCropRegion = WaylandWebOS_ExportedSetCropRegion;
+    device->WebOSExportedSetProperty = WaylandWebOS_ExportedSetProperty;
+    device->WebOSDestroyExportedWindow = WaylandWebOS_DestroyExportedWindow;
 #endif
 
     device->free = Wayland_DeleteDevice;
@@ -537,6 +589,9 @@ static void display_handle_geometry(void *data,
         }
     }
 #undef TF_CASE
+    if (wl_output_get_version(output) < 2) {
+        display_handle_done(data, output);
+    }
 }
 
 static void display_handle_mode(void *data,
@@ -698,12 +753,12 @@ static const struct wl_output_listener output_listener = {
     display_handle_scale
 };
 
-static void Wayland_add_display(SDL_VideoData *d, uint32_t id)
+static void Wayland_add_display(SDL_VideoData *d, uint32_t id, uint32_t version)
 {
     struct wl_output *output;
     SDL_WaylandOutputData *data;
 
-    output = wl_registry_bind(d->registry, id, &wl_output_interface, 2);
+    output = wl_registry_bind(d->registry, id, &wl_output_interface, SDL_min(2, version));
     if (!output) {
         SDL_SetError("Failed to retrieve output.");
         return;
@@ -808,6 +863,19 @@ static const struct qt_windowmanager_listener windowmanager_listener = {
 };
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH */
 
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+
+static void webos_cursor_visibility(void *data, struct wl_webos_input_manager *wl_webos_input_manager,
+                                    uint32_t visibility, struct wl_webos_seat *seat) {
+    SDL_VideoData *d = data;
+    (void) d;
+}
+
+static const struct wl_webos_input_manager_listener webos_input_manager_listener = {
+    webos_cursor_visibility
+};
+#endif
+
 static void handle_ping_xdg_wm_base(void *data, struct xdg_wm_base *xdg, uint32_t serial)
 {
     xdg_wm_base_pong(xdg, serial);
@@ -840,7 +908,9 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
     if (SDL_strcmp(interface, "wl_compositor") == 0) {
         d->compositor = wl_registry_bind(d->registry, id, &wl_compositor_interface, SDL_min(4, version));
     } else if (SDL_strcmp(interface, "wl_output") == 0) {
-        Wayland_add_display(d, id);
+        Wayland_add_display(d, id, version);
+    } else if (SDL_strcmp(interface, "wl_shell") == 0) {
+        d->shell.wl = wl_registry_bind(d->registry, id, &wl_shell_interface, 1);
     } else if (SDL_strcmp(interface, "wl_seat") == 0) {
         Wayland_display_add_input(d, id, version);
     } else if (SDL_strcmp(interface, "xdg_wm_base") == 0) {
@@ -868,7 +938,9 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
         d->decoration_manager = wl_registry_bind(d->registry, id, &zxdg_decoration_manager_v1_interface, 1);
     } else if (SDL_strcmp(interface, "zwp_tablet_manager_v2") == 0) {
         d->tablet_manager = wl_registry_bind(d->registry, id, &zwp_tablet_manager_v2_interface, 1);
-        Wayland_input_add_tablet(d->input, d->tablet_manager);
+        if (d->input) {
+            Wayland_input_add_tablet(d->input, d->tablet_manager);
+        }
     } else if (SDL_strcmp(interface, "zxdg_output_manager_v1") == 0) {
         version = SDL_min(version, 3); /* Versions 1 through 3 are supported. */
         d->xdg_output_manager = wl_registry_bind(d->registry, id, &zxdg_output_manager_v1_interface, version);
@@ -888,6 +960,26 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
                                             &qt_windowmanager_interface, 1);
         qt_windowmanager_add_listener(d->windowmanager, &windowmanager_listener, d);
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH */
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    } else if (SDL_strcmp(interface, "wl_webos_shell") == 0) {
+        d->shell.webos = wl_registry_bind(registry, id, &wl_webos_shell_interface, 1);
+    } else if (SDL_strcmp(interface, "wl_webos_foreign") == 0) {
+        d->webos_foreign = wl_registry_bind(registry, id, &wl_webos_foreign_interface, 1);
+        d->webos_foreign_table = SDL_calloc(1, sizeof(*d->webos_foreign_table));
+    } else if (SDL_strcmp(interface, "wl_webos_input_manager") == 0) {
+        // Danger! Requests of wl_webos_input_manager has completely broken ABI.
+        // NEVER use this interface directly.
+        d->webos_input_manager = wl_registry_bind(registry, id, WaylandWebOS_AbiFixGetInterface(interface), 1);
+        wl_webos_input_manager_add_listener(d->webos_input_manager, &webos_input_manager_listener, d);
+    } else if (SDL_strcmp(interface, "wl_starfish_pointer") == 0) {
+        SDL_VideoDevice *device = SDL_GetVideoDevice();
+        d->starfish_pointer = wl_registry_bind(registry, id, &wl_starfish_pointer_interface, 1);
+        wl_starfish_pointer_set_mrcu_standby_timer(d->starfish_pointer, device->webos_cursor_sleep_time);
+    } else if (SDL_strcmp(interface, "text_model_factory") == 0) {
+        // Warning! Requests of text_model after set_content_type (5) has broken ABI.
+        // Get proper opcode at runtime when those calls are needed.
+        d->text_model_factory = wl_registry_bind(registry, id, &text_model_factory_interface, 1);
+#endif
     }
 }
 
@@ -969,6 +1061,10 @@ int Wayland_VideoInit(_THIS)
     // Second roundtrip to receive all output events.
     WAYLAND_wl_display_roundtrip(data->display);
 
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    WaylandWebOS_VideoInit(_this);
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
+
     Wayland_InitMouse();
 
     /* Get the surface class name, usually the name of the application */
@@ -1018,6 +1114,10 @@ static void Wayland_VideoCleanup(_THIS)
 
     Wayland_QuitWin(data);
     Wayland_FiniMouse(data);
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    WaylandWebOS_VideoCleanUp(_this);
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
     for (i = _this->num_displays - 1; i >= 0; --i) {
         SDL_VideoDisplay *display = &_this->displays[i];

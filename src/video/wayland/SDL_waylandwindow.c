@@ -31,6 +31,7 @@
 #include "SDL_waylandwindow.h"
 #include "SDL_waylandvideo.h"
 #include "SDL_waylandtouch.h"
+#include "SDL_waylandwebos.h"
 #include "SDL_hints.h"
 #include "../../SDL_hints_c.h"
 #include "SDL_events.h"
@@ -41,6 +42,7 @@
 #include "xdg-activation-v1-client-protocol.h"
 #include "viewporter-client-protocol.h"
 #include "fractional-scale-v1-client-protocol.h"
+#include "webos-shell-client-protocol.h"
 
 #ifdef HAVE_LIBDECOR_H
 #include <libdecor.h>
@@ -251,7 +253,9 @@ static void ConfigureWindowGeometry(SDL_Window *window)
             GetFullScreenDimensions(window, &fs_width, &fs_height, NULL, NULL);
 
             /* Set the buffer scale to 1 since a viewport will be used. */
-            wl_surface_set_buffer_scale(data->surface, 1);
+            if (wl_compositor_get_version(viddata->compositor) >= 3) {
+                wl_surface_set_buffer_scale(data->surface, 1);
+            }
             SetDrawSurfaceViewport(window, data->drawable_width, data->drawable_height,
                                    output_width, output_height);
 
@@ -266,9 +270,11 @@ static void ConfigureWindowGeometry(SDL_Window *window)
 
         if (window_size_changed || drawable_size_changed) {
             if (NeedViewport(window)) {
-                wl_surface_set_buffer_scale(data->surface, 1);
+                if (wl_compositor_get_version(viddata->compositor) >= 3) {
+                    wl_surface_set_buffer_scale(data->surface, 1);
+                }
                 SetDrawSurfaceViewport(window, data->drawable_width, data->drawable_height, window->w, window->h);
-            } else {
+            } else if (wl_compositor_get_version(viddata->compositor) >= 3) {
                 UnsetDrawSurfaceViewport(window);
 
                 if (!FullscreenModeEmulation(window)) {
@@ -277,6 +283,8 @@ static void ConfigureWindowGeometry(SDL_Window *window)
                 } else {
                     wl_surface_set_buffer_scale(data->surface, 1);
                 }
+            } else {
+                UnsetDrawSurfaceViewport(window);
             }
 
             /* Clamp the physical window size to the system minimum required size. */
@@ -530,7 +538,11 @@ static void gles_swap_frame_done(void *data, struct wl_callback *cb, uint32_t ti
     SDL_AtomicSet(&wind->swap_interval_ready, 1); /* mark window as ready to present again. */
 
     /* reset this callback to fire again once a new frame was presented and compositor wants the next one. */
-    wind->gles_swap_frame_callback = wl_surface_frame(wind->gles_swap_frame_surface_wrapper);
+    if (wind->gles_swap_frame_surface_wrapper) {
+        wind->gles_swap_frame_callback = wl_surface_frame(wind->gles_swap_frame_surface_wrapper);
+    } else {
+        wind->gles_swap_frame_callback = wl_surface_frame(wind->surface);
+    }
     wl_callback_destroy(cb);
     wl_callback_add_listener(wind->gles_swap_frame_callback, &gles_swap_frame_listener, data);
 }
@@ -1315,8 +1327,11 @@ void Wayland_ShowWindow(_THIS, SDL_Window *window)
      *
      * -flibit
      */
+    // On webOS 1, detaching the buffer will cause eglSwapBuffers to hang forever.
+#ifndef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
     wl_surface_attach(data->surface, NULL, 0, 0);
     wl_surface_commit(data->surface);
+#endif
 
     /* Create the shell surface and map the toplevel/popup */
 #ifdef HAVE_LIBDECOR_H
@@ -1375,6 +1390,15 @@ void Wayland_ShowWindow(_THIS, SDL_Window *window)
             xdg_toplevel_add_listener(data->shell_surface.xdg.roleobj.toplevel, &toplevel_listener_xdg, data);
         }
     }
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    else if (c->shell.wl) {
+        if (window->flags & SDL_WINDOW_FULLSCREEN) {
+            wl_shell_surface_set_fullscreen(data->shell_surface.webos.wl, WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT, 0, NULL);
+        } else {
+            wl_shell_surface_set_toplevel(data->shell_surface.webos.wl);
+        }
+    }
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
     /* Restore state that was set prior to this call */
     Wayland_SetWindowTitle(_this, window);
@@ -1421,6 +1445,8 @@ void Wayland_ShowWindow(_THIS, SDL_Window *window)
 
         /* Set the geometry */
         xdg_surface_set_window_geometry(data->shell_surface.xdg.surface, 0, 0, data->window_width, data->window_height);
+    } else if (c->shell.wl) {
+        WAYLAND_wl_display_flush(c->display);
     } else {
         /* Nothing to see here, just commit. */
         wl_surface_commit(data->surface);
@@ -1550,6 +1576,18 @@ void Wayland_HideWindow(_THIS, SDL_Window *window)
             wind->shell_surface.xdg.surface = NULL;
         }
     }
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+        else if (data->shell.wl) {
+        if (wind->shell_surface.webos.webos) {
+            wl_webos_shell_surface_destroy(wind->shell_surface.webos.webos);
+            wind->shell_surface.webos.webos = NULL;
+        }
+        if (wind->shell_surface.webos.wl) {
+            wl_shell_surface_destroy(wind->shell_surface.webos.wl);
+            wind->shell_surface.webos.wl = NULL;
+        }
+    }
+#endif
 
     /*
      * Roundtrip required to avoid a possible protocol violation when
@@ -1626,6 +1664,11 @@ static void Wayland_activate_window(SDL_VideoData *data, SDL_WindowData *wind,
         }
         xdg_activation_token_v1_commit(wind->activation_token);
     }
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    else if (wind->shell_surface.webos.webos) {
+        wl_webos_shell_surface_set_state(wind->shell_surface.webos.webos, WL_WEBOS_SHELL_SURFACE_STATE_FULLSCREEN);
+    }
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 }
 
 void Wayland_RaiseWindow(_THIS, SDL_Window *window)
@@ -2022,6 +2065,10 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
 
     data->surface =
         wl_compositor_create_surface(c->compositor);
+    if (!data->surface) {
+        return SDL_SetError("Could not create surface");
+    }
+
     wl_surface_add_listener(data->surface, &surface_listener, data);
 
     SDL_WAYLAND_register_surface(data->surface);
@@ -2035,16 +2082,22 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
      * window isn't visible.
      */
     if (window->flags & SDL_WINDOW_OPENGL) {
-        data->gles_swap_frame_event_queue = WAYLAND_wl_display_create_queue(data->waylandData->display);
-        data->gles_swap_frame_surface_wrapper = WAYLAND_wl_proxy_create_wrapper(data->surface);
-        WAYLAND_wl_proxy_set_queue((struct wl_proxy *)data->gles_swap_frame_surface_wrapper, data->gles_swap_frame_event_queue);
-        data->gles_swap_frame_callback = wl_surface_frame(data->gles_swap_frame_surface_wrapper);
+        if (WAYLAND_wl_proxy_create_wrapper) {
+            data->gles_swap_frame_event_queue = WAYLAND_wl_display_create_queue(data->waylandData->display);
+            data->gles_swap_frame_surface_wrapper = WAYLAND_wl_proxy_create_wrapper(data->surface);
+            WAYLAND_wl_proxy_set_queue((struct wl_proxy *)data->gles_swap_frame_surface_wrapper, data->gles_swap_frame_event_queue);
+            data->gles_swap_frame_callback = wl_surface_frame(data->gles_swap_frame_surface_wrapper);
+        } else {
+            data->gles_swap_frame_callback = wl_surface_frame(data->surface);
+        }
         wl_callback_add_listener(data->gles_swap_frame_callback, &gles_swap_frame_listener, data);
     }
 
     /* Fire a callback when the compositor wants a new frame to set the surface damage region. */
+#ifndef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
     data->surface_damage_frame_callback = wl_surface_frame(data->surface);
     wl_callback_add_listener(data->surface_damage_frame_callback, &surface_damage_frame_listener, data);
+#endif
 
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH
     if (c->surface_extension) {
@@ -2055,6 +2108,24 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
         QtExtendedSurface_Subscribe(data->extended_surface, SDL_HINT_QTWAYLAND_WINDOW_FLAGS);
     }
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH */
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (c->shell.wl) {
+        data->shell_surface.webos.wl = wl_shell_get_shell_surface(c->shell.wl, data->surface);
+        if (data->shell_surface.webos.wl == NULL) {
+            return SDL_SetError("Can't create shell surface");
+        }
+        wl_shell_surface_set_class(data->shell_surface.webos.wl, c->classname);
+        wl_shell_surface_set_toplevel(data->shell_surface.webos.wl);
+    }
+    if (c->shell.webos) {
+        data->shell_surface.webos.webos = wl_webos_shell_get_shell_surface(c->shell.webos, data->surface);
+        wl_webos_shell_surface_set_user_data(data->shell_surface.webos.webos, data);
+        if (data->shell_surface.webos.webos == NULL) {
+            return SDL_SetError("Can't create webos shell surface");
+        }
+        WaylandWebOS_SetupSurface(_this, data);
+    }
+#endif
 
     if (window->flags & SDL_WINDOW_OPENGL) {
         data->egl_window = WAYLAND_wl_egl_window_create(data->surface, data->drawable_width, data->drawable_height);
@@ -2192,6 +2263,12 @@ void Wayland_SetWindowTitle(_THIS, SDL_Window *window)
     SDL_VideoData *viddata = _this->driverdata;
     const char *title = window->title ? window->title : "";
 
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (wind->shell_surface.webos.webos) {
+        wl_webos_shell_surface_set_property(wind->shell_surface.webos.webos, "title", title);
+    }
+#endif
+
     if (wind->shell_surface_type == WAYLAND_SURFACE_XDG_POPUP) {
         return;
     }
@@ -2286,8 +2363,12 @@ void Wayland_DestroyWindow(_THIS, SDL_Window *window)
 
         if (wind->gles_swap_frame_callback) {
             wl_callback_destroy(wind->gles_swap_frame_callback);
-            WAYLAND_wl_proxy_wrapper_destroy(wind->gles_swap_frame_surface_wrapper);
-            WAYLAND_wl_event_queue_destroy(wind->gles_swap_frame_event_queue);
+            if (wind->gles_swap_frame_surface_wrapper) {
+                WAYLAND_wl_proxy_wrapper_destroy(wind->gles_swap_frame_surface_wrapper);
+            }
+            if(wind->gles_swap_frame_event_queue) {
+                WAYLAND_wl_event_queue_destroy(wind->gles_swap_frame_event_queue);
+            }
         }
 
         if (wind->surface_damage_frame_callback) {

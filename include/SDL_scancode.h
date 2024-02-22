@@ -429,6 +429,18 @@ typedef enum
 
     /* Add any other keys here. */
 
+    SDL_SCANCODE_WEBOS_CH_UP = 480 /**< webOS remote previous channel button */,
+    SDL_SCANCODE_WEBOS_CH_DOWN = 481 /**< webOS remote next channel button */,
+    SDL_SCANCODE_WEBOS_BACK = 482 /**< webOS back button */,
+    SDL_SCANCODE_WEBOS_CURSOR_SHOW = 484 /**< webOS show cursor event, sent as a key */,
+    SDL_SCANCODE_WEBOS_CURSOR_HIDE = 485 /**< webOS hide cursor event, sent as a key */,
+    SDL_SCANCODE_WEBOS_RED = 486 /**< webOS remote red button */,
+    SDL_SCANCODE_WEBOS_GREEN = 487 /**< webOS remote green button */,
+    SDL_SCANCODE_WEBOS_YELLOW = 488 /**< webOS remote yellow button */,
+    SDL_SCANCODE_WEBOS_BLUE = 489 /**< webOS remote blue button */,
+    SDL_SCANCODE_WEBOS_EXIT = 505 /**< webOS remote exit button */,
+
+
     SDL_NUM_SCANCODES = 512 /**< not a key, just marks the number of scancodes
                                  for array bounds */
 } SDL_Scancode;

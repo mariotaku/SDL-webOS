@@ -43,6 +43,12 @@
 #include "SDL_hints.h"
 #include "../../SDL_hints_c.h"
 
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+#include "../../core/webos/SDL_webos_libs.h"
+#include "SDL_waylandwebos_cursor.h"
+#include "webos-input-manager-client-protocol.h"
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
+
 static int Wayland_SetRelativeMouseMode(SDL_bool enabled);
 
 typedef struct
@@ -58,6 +64,9 @@ typedef struct
      */
     SDL_SystemCursor system_cursor;
     void *shm_data;
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    SDL_Surface *bitmap;
+#endif
 } Wayland_CursorData;
 
 #ifdef SDL_USE_LIBDBUS
@@ -385,6 +394,8 @@ static SDL_Cursor *Wayland_CreateCursor(SDL_Surface *surface, int hot_x, int hot
         SDL_VideoDevice *vd = SDL_GetVideoDevice();
         SDL_VideoData *wd = (SDL_VideoData *)vd->driverdata;
         Wayland_CursorData *data = SDL_calloc(1, sizeof(Wayland_CursorData));
+        SDL_bool needs_conversion = surface->format->format != SDL_PIXELFORMAT_ARGB8888;
+        SDL_Surface *tmp_surface = surface;
         if (!data) {
             SDL_OutOfMemory();
             SDL_free(cursor);
@@ -401,12 +412,16 @@ static SDL_Cursor *Wayland_CreateCursor(SDL_Surface *surface, int hot_x, int hot
             SDL_free(cursor);
             return NULL;
         }
-
+        if (needs_conversion) {
+            tmp_surface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ARGB8888, 0);
+        }
         /* Wayland requires premultiplied alpha for its surfaces. */
-        SDL_PremultiplyAlpha(surface->w, surface->h,
-                             surface->format->format, surface->pixels, surface->pitch,
-                             SDL_PIXELFORMAT_ARGB8888, data->shm_data, surface->w * 4);
-
+        SDL_PremultiplyAlpha(tmp_surface->w, tmp_surface->h,
+                             tmp_surface->format->format, tmp_surface->pixels, tmp_surface->pitch,
+                             SDL_PIXELFORMAT_ARGB8888, data->shm_data, tmp_surface->w * 4);
+        if (needs_conversion) {
+            SDL_FreeSurface(tmp_surface);
+        }
         data->surface = wl_compositor_create_surface(wd->compositor);
         wl_surface_set_user_data(data->surface, NULL);
 
@@ -423,6 +438,38 @@ static SDL_Cursor *Wayland_CreateCursor(SDL_Surface *surface, int hot_x, int hot
 
 static SDL_Cursor *Wayland_CreateSystemCursor(SDL_SystemCursor id)
 {
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    SDL_Cursor *cursor;
+    int hot_pos = 0;
+    SDL_Surface *surface = NULL;
+    switch (id) {
+        case SDL_SYSTEM_CURSOR_ARROW:
+            hot_pos = 0;
+            surface = WaylandWebOS_LoadCursorSurface("A", "N");
+            break;
+        case SDL_SYSTEM_CURSOR_HAND:
+            hot_pos = 0;
+            surface = WaylandWebOS_LoadCursorSurface("POINT", "N");
+            break;
+        case SDL_SYSTEM_CURSOR_NO:
+            hot_pos = 0;
+            surface = WaylandWebOS_LoadCursorSurface("Disable", "N");
+            break;
+        default:
+            hot_pos = 0xff;
+            surface = WaylandWebOS_LoadCursorSurface("A", "N");
+            break;
+    }
+    if (!surface) {
+        return NULL;
+    }
+    cursor = Wayland_CreateCursor(surface, hot_pos, hot_pos);
+    if (cursor) {
+        Wayland_CursorData *cdata = cursor->driverdata;
+        cdata->bitmap = surface;
+    }
+    return cursor;
+#else
     SDL_VideoData *data = SDL_GetVideoDevice()->driverdata;
     SDL_Cursor *cursor;
 
@@ -448,6 +495,7 @@ static SDL_Cursor *Wayland_CreateSystemCursor(SDL_SystemCursor id)
     }
 
     return cursor;
+#endif
 }
 
 static SDL_Cursor *Wayland_CreateDefaultCursor()
@@ -468,6 +516,13 @@ static void Wayland_FreeCursorData(Wayland_CursorData *d)
         wl_surface_destroy(d->surface);
         d->surface = NULL;
     }
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (d->bitmap) {
+        SDL_FreeSurface(d->bitmap);
+        d->bitmap = NULL;
+    }
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 }
 
 static void Wayland_FreeCursor(SDL_Cursor *cursor)
@@ -510,7 +565,9 @@ static int Wayland_ShowCursor(SDL_Cursor *cursor)
             }
         }
 
-        wl_surface_set_buffer_scale(data->surface, scale);
+        if (wl_compositor_get_version(d->compositor) >= 3) {
+            wl_surface_set_buffer_scale(data->surface, scale);
+        }
         wl_pointer_set_cursor(pointer,
                               input->pointer_enter_serial,
                               data->surface,
@@ -579,6 +636,30 @@ static int Wayland_SetRelativeMouseMode(SDL_bool enabled)
         return Wayland_input_unlock_pointer(data->input);
     }
 }
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+static SDL_bool WaylandWebOS_SetCursorVisibility(SDL_bool visible)
+{
+    SDL_VideoDevice *vd;
+    SDL_VideoData *data;
+
+    vd = SDL_GetVideoDevice();
+    if (!vd) {
+        return SDL_FALSE;
+    }
+    data = (SDL_VideoData *) vd->driverdata;
+    if (!data) {
+        return SDL_FALSE;
+    }
+
+    if (WL_WEBOS_INPUT_MANAGER_SET_CURSOR_VISIBILITY == -1) {
+        return SDL_FALSE;
+    }
+    wl_webos_input_manager_set_cursor_visibility(data->webos_input_manager, visible);
+
+    return SDL_TRUE;
+}
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
 static void SDLCALL Wayland_EmulateMouseWarpChanged(void *userdata, const char *name, const char *oldValue, const char *hint)
 {
@@ -657,6 +738,9 @@ void Wayland_InitMouse(void)
     mouse->WarpMouse = Wayland_WarpMouse;
     mouse->WarpMouseGlobal = Wayland_WarpMouseGlobal;
     mouse->SetRelativeMouseMode = Wayland_SetRelativeMouseMode;
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    mouse->WebOSSetCursorVisibility = WaylandWebOS_SetCursorVisibility;
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
     input->relative_mode_override = SDL_FALSE;
     input->cursor_visible = SDL_TRUE;
