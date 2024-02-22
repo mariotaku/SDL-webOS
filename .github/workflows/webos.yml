@@ -1,6 +1,10 @@
 name: Build (webOS)
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  release:
+    types: [ published ]
 
 jobs:
   Build:
@@ -31,3 +35,23 @@ jobs:
 
       - name: Build (CMake)
         run: cmake --build build/ --config Release --verbose --parallel
+
+      - name: Package (Release Only)
+        if: github.event_name == 'release'
+        shell: bash
+        run: |
+          cmake --install build/ --prefix dist
+          cd dist
+          tar -czf ../SDL2-$(./bin/sdl2-config --version)-webos.tar.gz .
+
+      - name: Release
+        if: github.event_name == 'release'
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.event.release.tag_name }}
+          allowUpdates: true
+          omitNameDuringUpdate: true
+          omitBody: true
+          omitPrereleaseDuringUpdate: true
+          artifacts: SDL2-*-webos.tar.gz
