@@ -20,7 +20,7 @@
 */
 #include "../../SDL_internal.h"
 
-#if __WEBOS__
+#ifdef __WEBOS__
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* System dependent filesystem routines                                */

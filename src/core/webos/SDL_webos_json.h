@@ -20,7 +20,7 @@
 */
 #include "../../SDL_internal.h"
 
-#if __WEBOS__
+#ifdef __WEBOS__
 
 #ifndef SDL_webos_json_h_
 #define SDL_webos_json_h_

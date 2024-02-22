@@ -27,7 +27,7 @@
 
 SDL_Sandbox SDL_DetectSandbox(void)
 {
-#if __WEBOS__
+#ifdef __WEBOS__
     if (SDL_getenv("SDL_WEBOS_FORCE_JAILED") != NULL) {
         return SDL_SANDBOX_UNKNOWN_CONTAINER;
     }

@@ -202,7 +202,7 @@ int SDL_InitSubSystem(Uint32 flags)
 #ifdef SDL_USE_LIBDBUS
     SDL_DBus_Init();
 #endif
-#if __WEBOS__
+#ifdef __WEBOS__
     if (SDL_webOSLoadLibraries() < 0) {
         return SDL_SetError("Failed to load webOS libraries");
     }
@@ -530,7 +530,7 @@ void SDL_Quit(void)
 #ifdef SDL_USE_LIBDBUS
     SDL_DBus_Quit();
 #endif
-#if __WEBOS__
+#ifdef __WEBOS__
     SDL_webOSUnregisterApp();
     SDL_webOSUnloadLibraries();
 #endif
