@@ -745,9 +745,9 @@ static void LINUX_FallbackJoystickDetect(void)
 
             last_input_dir_mtime = sb.st_mtime;
         }
+#endif
 
         last_joy_detect_time = now;
-#endif
     }
 }
 
