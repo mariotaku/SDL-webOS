@@ -147,6 +147,11 @@ struct SDL_WaylandInput
     SDL_bool relative_mode_override;
     SDL_bool warp_emulation_prohibited;
     SDL_bool keyboard_is_virtual;
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    /* On webOS, multiple seats are present. This is a very evil hack to support that non-standard case */
+    struct SDL_WaylandInput *next;
+#endif
 };
 
 extern void Wayland_PumpEvents(_THIS);

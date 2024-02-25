@@ -2032,6 +2032,13 @@ static void Wayland_create_data_device(SDL_VideoData *d)
         return;
     }
 
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (d->input->data_device) {
+        /* Shouldn't be called at all on webOS, but just in case */
+        return;
+    }
+#endif
+
     data_device = SDL_calloc(1, sizeof(*data_device));
     if (!data_device) {
         return;
@@ -2059,6 +2066,13 @@ static void Wayland_create_primary_selection_device(SDL_VideoData *d)
         /* No seat yet, will be initialized later. */
         return;
     }
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (d->input->primary_selection_device) {
+        /* Shouldn't be called at all on webOS, but just in case */
+        return;
+    }
+#endif
 
     primary_selection_device = SDL_calloc(1, sizeof(*primary_selection_device));
     if (!primary_selection_device) {
@@ -2088,6 +2102,13 @@ static void Wayland_create_text_input(SDL_VideoData *d)
         /* No seat yet, will be initialized later. */
         return;
     }
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (d->input->text_input) {
+        /* Shouldn't be called at all on webOS, but just in case */
+        return;
+    }
+#endif
 
     text_input = SDL_calloc(1, sizeof(*text_input));
     if (!text_input) {
@@ -2467,6 +2488,23 @@ void Wayland_display_add_input(SDL_VideoData *d, uint32_t id, uint32_t version)
 {
     struct SDL_WaylandInput *input = d->input;
 
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (input->seat) {
+        struct SDL_WaylandInput *tail;
+        /* Find the tail if the input has seat */
+        while (input->next) {
+            input = input->next;
+        }
+        tail = input;
+        input = SDL_calloc(1, sizeof(struct SDL_WaylandInput));
+        if (!input) {
+            return;
+        }
+        input->display = d;
+        tail->next = input;
+    }
+#endif
+
     input->seat = wl_registry_bind(d->registry, id, &wl_seat_interface, SDL_min(SDL_WL_SEAT_VERSION, version));
 
     if (d->data_device_manager) {
@@ -2572,6 +2610,15 @@ void Wayland_display_destroy_input(SDL_VideoData *d)
     if (input->xkb.keymap) {
         WAYLAND_xkb_keymap_unref(input->xkb.keymap);
     }
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    /* Use recursive call to free up linked list */
+    /* Extremely evil but prevents goto usages and large changes */
+    if (input->next) {
+        d->input = input->next;
+        Wayland_display_destroy_input(d);
+    }
+#endif
 
     SDL_free(input);
     d->input = NULL;
