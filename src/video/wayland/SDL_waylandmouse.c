@@ -47,6 +47,7 @@
 #include "../../core/webos/SDL_webos_libs.h"
 #include "SDL_waylandwebos_cursor.h"
 #include "webos-input-manager-client-protocol.h"
+#include "starfish-client-protocol.h"
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
 static int Wayland_SetRelativeMouseMode(SDL_bool enabled);
@@ -597,6 +598,13 @@ static void Wayland_WarpMouse(SDL_Window *window, int x, int y)
     SDL_VideoData *d = vd->driverdata;
     struct SDL_WaylandInput *input = d->input;
 
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (d->starfish_pointer) {
+        wl_starfish_pointer_set_cursor_position(d->starfish_pointer, window->x + x, window->y + y);
+        return;
+    }
+#endif
+
     if (input->cursor_visible == SDL_TRUE) {
         SDL_Unsupported();
     } else if (input->warp_emulation_prohibited) {
@@ -611,6 +619,14 @@ static void Wayland_WarpMouse(SDL_Window *window, int x, int y)
 
 static int Wayland_WarpMouseGlobal(int x, int y)
 {
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    SDL_VideoDevice *vd = SDL_GetVideoDevice();
+    SDL_VideoData *d = vd->driverdata;
+    if (d->starfish_pointer) {
+        wl_starfish_pointer_set_cursor_position(d->starfish_pointer, x, y);
+        return 0;
+    }
+#endif
     return SDL_Unsupported();
 }
 
