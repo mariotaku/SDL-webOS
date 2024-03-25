@@ -2177,6 +2177,11 @@ int Wayland_CreateWindow(_THIS, SDL_Window *window)
         data->shell_surface_type = WAYLAND_SURFACE_LIBDECOR;
     } else
 #endif
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (c->shell.webos) {
+        data->shell_surface_type = WAYLAND_SURFACE_WEBOS;
+    } else
+#endif
         if (c->shell.xdg) {
         if (IS_POPUP(window)) {
             data->shell_surface_type = WAYLAND_SURFACE_XDG_POPUP;

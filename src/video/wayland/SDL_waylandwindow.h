@@ -79,7 +79,8 @@ typedef struct
         WAYLAND_SURFACE_UNKNOWN = 0,
         WAYLAND_SURFACE_XDG_TOPLEVEL,
         WAYLAND_SURFACE_XDG_POPUP,
-        WAYLAND_SURFACE_LIBDECOR
+        WAYLAND_SURFACE_LIBDECOR,
+        WAYLAND_SURFACE_WEBOS,
     } shell_surface_type;
 
     struct wl_egl_window *egl_window;

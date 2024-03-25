@@ -402,6 +402,28 @@ static void pointer_handle_motion(void *data, struct wl_pointer *pointer,
 {
     struct SDL_WaylandInput *input = data;
     SDL_WindowData *window = input->pointer_focus;
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    static bool warping = false;
+    if (window && window->waylandData->relative_mouse_mode && time != input->pointer_enter_serial) {
+        if (!warping) {
+            SDL_VideoDisplay *display = SDL_GetDisplayForWindow(window->sdlwindow);
+            SDL_WaylandOutputData *output = (SDL_WaylandOutputData *)display->driverdata;
+            int cx = output->width / 2, cy = output->height / 2;
+            warping = true;
+            wl_starfish_pointer_set_cursor_position(window->waylandData->starfish_pointer, cx, cy);
+        } else {
+            const float dx_f = (float)wl_fixed_to_double(input->sx_w) - (float)wl_fixed_to_double(sx_w);
+            const float dy_f = (float)wl_fixed_to_double(input->sy_w) - (float)wl_fixed_to_double(sy_w);
+            const int dx = (int)SDL_floorf(dx_f * window->pointer_scale_x);
+            const int dy = (int)SDL_floorf(dy_f * window->pointer_scale_y);
+            warping = false;
+            SDL_SendMouseMotion(window->sdlwindow, 0, 1, dx, dy);
+        }
+        input->sx_w = sx_w;
+        input->sy_w = sy_w;
+        return;
+    }
+#endif
     input->sx_w = sx_w;
     input->sy_w = sy_w;
     if (input->pointer_focus) {
@@ -2607,6 +2629,13 @@ int Wayland_input_lock_pointer(struct SDL_WaylandInput *input)
     SDL_VideoData *d = input->display;
     SDL_Window *window;
     struct zwp_relative_pointer_v1 *relative_pointer;
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (d->starfish_pointer) {
+        d->relative_mouse_mode = 1;
+        return 0;
+    }
+#endif
 
     if (!d->relative_pointer_manager) {
         return -1;
