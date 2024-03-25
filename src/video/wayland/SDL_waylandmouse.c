@@ -586,7 +586,18 @@ static int Wayland_ShowCursor(SDL_Cursor *cursor)
 
     } else {
         input->cursor_visible = SDL_FALSE;
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+        {
+            SDL_Cursor *hidden_cur = SDL_GetMouse()->hidden_cursor;
+            Wayland_CursorData *data = hidden_cur->driverdata;
+            wl_pointer_set_cursor(pointer, input->pointer_enter_serial, data->surface, 0, 0);
+            wl_surface_attach(data->surface, data->buffer, 0, 0);
+            wl_surface_damage(data->surface, 0, 0, data->w, data->h);
+            wl_surface_commit(data->surface);
+        }
+#else
         wl_pointer_set_cursor(pointer, input->pointer_enter_serial, NULL, 0, 0);
+#endif
     }
 
     return 0;

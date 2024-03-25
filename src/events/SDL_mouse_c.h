@@ -129,6 +129,9 @@ typedef struct
     SDL_Cursor *cursors;
     SDL_Cursor *def_cursor;
     SDL_Cursor *cur_cursor;
+#ifdef __WEBOS__
+    SDL_Cursor *hidden_cursor;
+#endif
     SDL_bool cursor_shown;
 
     /* Driver-dependent data. */
