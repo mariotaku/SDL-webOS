@@ -44,6 +44,7 @@
 #include "tablet-unstable-v2-client-protocol.h"
 #include "primary-selection-unstable-v1-client-protocol.h"
 #include "webos-input-manager-client-protocol.h"
+#include "starfish-client-protocol.h"
 
 #ifdef HAVE_LIBDECOR_H
 #include <libdecor.h>
