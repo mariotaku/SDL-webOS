@@ -83,7 +83,7 @@ const char *WaylandWebOS_CreateExportedWindow(_THIS, SDL_webOSExportedWindowType
 
     if (data->webos_foreign_table->windows != NULL) {
         webos_foreign_window *cur = data->webos_foreign_table->windows;
-        while (cur != NULL && cur->next != NULL) {
+        while (cur->next != NULL) {
             cur = cur->next;
         }
         cur->next = foreign_window;
