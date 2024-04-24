@@ -614,6 +614,15 @@ static void pointer_handle_button_common(struct SDL_WaylandInput *input, uint32_
         case BTN_EXTRA:
             sdl_button = SDL_BUTTON_X2;
             break;
+        case BTN_FORWARD:
+            sdl_button = SDL_BUTTON_X2 + 1;
+            break;
+        case BTN_BACK:
+            sdl_button = SDL_BUTTON_X2 + 2;
+            break;
+        case BTN_TASK:
+            sdl_button = SDL_BUTTON_X2 + 3;
+            break;
         default:
             return;
         }
