@@ -103,7 +103,7 @@ typedef struct
     struct wl_starfish_pointer *starfish_pointer;
     struct text_model_factory *text_model_factory;
     struct {
-        int count;
+        unsigned int count;
         struct webos_foreign_window *windows;
     } *webos_foreign_table;
     struct webos_osk_data *webos_screen_keyboard_data;
