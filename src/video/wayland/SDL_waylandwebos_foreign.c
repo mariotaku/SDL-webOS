@@ -116,34 +116,41 @@ SDL_bool WaylandWebOS_SetExportedWindow(_THIS, const char *windowId, SDL_Rect *s
     SDL_LockMutex(_this->webos_foreign_lock);
     if (data->webos_foreign_table->count != 0) {
         webos_foreign_window *window = data->webos_foreign_table->windows;
+        struct wl_region *src_region = NULL;
+        struct wl_region *dst_region = NULL;
         while (window != NULL) {
-            struct wl_region *src_region = NULL;
-            struct wl_region *dst_region = NULL;
-            if (SDL_strcmp(window->window_id, windowId) != 0) {
-                window = window->next;
-                continue;
+            if (SDL_strcmp(window->window_id, windowId) == 0) {
+                break;
             }
-            if (src != NULL) {
-                src_region = wl_compositor_create_region(data->compositor);
-                wl_region_add(src_region, src->x, src->y, src->w, src->h);
-            }
-            if (dst != NULL) {
-                dst_region = wl_compositor_create_region(data->compositor);
-                wl_region_add(dst_region, dst->x, dst->y, dst->w, dst->h);
-            }
-            wl_webos_exported_set_exported_window(window->exported, src_region, dst_region);
-            SDL_UnlockMutex(_this->webos_foreign_lock);
-            if (src_region != NULL) {
-                wl_region_destroy(src_region);
-            }
-            if (dst_region != NULL) {
-                wl_region_destroy(dst_region);
-            }
-            return SDL_TRUE;
+            window = window->next;
         }
+        if (window == NULL) {
+            SDL_SetError("Failed setting exported window: No exported window with id %s", windowId);
+            SDL_UnlockMutex(_this->webos_foreign_lock);
+            return SDL_FALSE;
+        }
+
+        if (src != NULL) {
+            src_region = wl_compositor_create_region(data->compositor);
+            wl_region_add(src_region, src->x, src->y, src->w, src->h);
+        }
+        if (dst != NULL) {
+            dst_region = wl_compositor_create_region(data->compositor);
+            wl_region_add(dst_region, dst->x, dst->y, dst->w, dst->h);
+        }
+        wl_webos_exported_set_exported_window(window->exported, src_region, dst_region);
+        if (src_region != NULL) {
+            wl_region_destroy(src_region);
+        }
+        if (dst_region != NULL) {
+            wl_region_destroy(dst_region);
+        }
+        SDL_UnlockMutex(_this->webos_foreign_lock);
+        return SDL_TRUE;
+    } else {
+        SDL_SetError("Failed setting exported window: No exported windows");
+        SDL_UnlockMutex(_this->webos_foreign_lock);
     }
-    SDL_UnlockMutex(_this->webos_foreign_lock);
-    SDL_SetError("Failed setting exported window: No exported window with id %s", windowId);
     return SDL_FALSE;
 }
 
@@ -161,42 +168,48 @@ SDL_bool WaylandWebOS_ExportedSetCropRegion(_THIS, const char *windowId, SDL_Rec
     SDL_LockMutex(_this->webos_foreign_lock);
     if (data->webos_foreign_table->count != 0) {
         webos_foreign_window *window = data->webos_foreign_table->windows;
+        struct wl_region *org_region = NULL;
+        struct wl_region *src_region = NULL;
+        struct wl_region *dst_region = NULL;
         while (window != NULL) {
-            struct wl_region *org_region = NULL;
-            struct wl_region *src_region = NULL;
-            struct wl_region *dst_region = NULL;
-            if (SDL_strcmp(window->window_id, windowId) != 0) {
-                window = window->next;
-                continue;
+            if (SDL_strcmp(window->window_id, windowId) == 0) {
+                break;
             }
-            if (org != NULL) {
-                org_region = wl_compositor_create_region(data->compositor);
-                wl_region_add(org_region, org->x, org->y, org->w, org->h);
-            }
-            if (src != NULL) {
-                src_region = wl_compositor_create_region(data->compositor);
-                wl_region_add(src_region, src->x, src->y, src->w, src->h);
-            }
-            if (dst != NULL) {
-                dst_region = wl_compositor_create_region(data->compositor);
-                wl_region_add(dst_region, dst->x, dst->y, dst->w, dst->h);
-            }
-            wl_webos_exported_set_crop_region(window->exported, org_region, src_region, dst_region);
-            SDL_UnlockMutex(_this->webos_foreign_lock);
-            if (org_region != NULL) {
-                wl_region_destroy(org_region);
-            }
-            if (src_region != NULL) {
-                wl_region_destroy(src_region);
-            }
-            if (dst_region != NULL) {
-                wl_region_destroy(dst_region);
-            }
-            return SDL_TRUE;
+            window = window->next;
         }
+        if (window == NULL) {
+            SDL_SetError("Failed setting exported window: No exported window with id %s", windowId);
+            SDL_UnlockMutex(_this->webos_foreign_lock);
+            return SDL_FALSE;
+        }
+        if (org != NULL) {
+            org_region = wl_compositor_create_region(data->compositor);
+            wl_region_add(org_region, org->x, org->y, org->w, org->h);
+        }
+        if (src != NULL) {
+            src_region = wl_compositor_create_region(data->compositor);
+            wl_region_add(src_region, src->x, src->y, src->w, src->h);
+        }
+        if (dst != NULL) {
+            dst_region = wl_compositor_create_region(data->compositor);
+            wl_region_add(dst_region, dst->x, dst->y, dst->w, dst->h);
+        }
+        wl_webos_exported_set_crop_region(window->exported, org_region, src_region, dst_region);
+        if (org_region != NULL) {
+            wl_region_destroy(org_region);
+        }
+        if (src_region != NULL) {
+            wl_region_destroy(src_region);
+        }
+        if (dst_region != NULL) {
+            wl_region_destroy(dst_region);
+        }
+        SDL_UnlockMutex(_this->webos_foreign_lock);
+        return SDL_TRUE;
+    } else {
+        SDL_SetError("Failed setting exported window: No exported windows");
+        SDL_UnlockMutex(_this->webos_foreign_lock);
     }
-    SDL_UnlockMutex(_this->webos_foreign_lock);
-    SDL_SetError("Failed setting exported window: No exported window with id %s", windowId);
     return SDL_FALSE;
 }
 
@@ -223,18 +236,24 @@ SDL_bool WaylandWebOS_ExportedSetProperty(_THIS, const char *windowId, const cha
     if (data->webos_foreign_table->count != 0) {
         webos_foreign_window *window = data->webos_foreign_table->windows;
         while (window != NULL) {
-            if (SDL_strcmp(window->window_id, windowId) != 0) {
-                window = window->next;
-                continue;
+            if (SDL_strcmp(window->window_id, windowId) == 0) {
+                break;
             }
-            wl_webos_exported_set_property(window->exported, name, value);
-            SDL_UnlockMutex(_this->webos_foreign_lock);
-            return SDL_TRUE;
+            window = window->next;
         }
+        if (window == NULL) {
+            SDL_SetError("Failed setting exported window: No exported window with id %s", windowId);
+            SDL_UnlockMutex(_this->webos_foreign_lock);
+            return SDL_FALSE;
+        }
+        wl_webos_exported_set_property(window->exported, name, value);
+        SDL_UnlockMutex(_this->webos_foreign_lock);
+        return SDL_TRUE;
+    } else {
+        SDL_SetError("Failed setting exported window: No exported windows");
+        SDL_UnlockMutex(_this->webos_foreign_lock);
+        return SDL_FALSE;
     }
-    SDL_UnlockMutex(_this->webos_foreign_lock);
-    SDL_SetError("Failed setting exported window: No exported window with id %s", windowId);
-    return SDL_FALSE;
 }
 
 void WaylandWebOS_DestroyExportedWindow(_THIS, const char *windowId)
@@ -254,21 +273,26 @@ void WaylandWebOS_DestroyExportedWindow(_THIS, const char *windowId)
         webos_foreign_window *prev = NULL;
         webos_foreign_window *window = data->webos_foreign_table->windows;
         while (window != NULL) {
-            if (SDL_strcmp(window->window_id, windowId) != 0) {
-                window = window->next;
-                prev = window;
-                continue;
+            if (SDL_strcmp(window->window_id, windowId) == 0) {
+                break;
             }
-            wl_webos_exported_destroy(window->exported);
-            data->webos_foreign_table->count -= 1;
-            if (prev == NULL) {
-                data->webos_foreign_table->windows = window->next;
-            } else {
-                prev->next = window->next;
-            }
-            SDL_free(window);
-            break;
+            prev = window;
+            window = window->next;
         }
+        if (window == NULL) {
+            SDL_UnlockMutex(_this->webos_foreign_lock);
+            SDL_SetError("Failed destroying exported window: No exported window with id %s", windowId);
+            return;
+        }
+        if (prev != NULL) {
+            prev->next = window->next;
+        } else {
+            data->webos_foreign_table->windows = window->next;
+        }
+        data->webos_foreign_table->count -= 1;
+        wl_webos_exported_destroy(window->exported);
+        SDL_free(window);
+        SDL_LogInfo(SDL_LOG_CATEGORY_VIDEO, "Destroyed exported window %s", windowId);
     }
     SDL_UnlockMutex(_this->webos_foreign_lock);
 }
