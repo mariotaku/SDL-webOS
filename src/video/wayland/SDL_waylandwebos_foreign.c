@@ -25,7 +25,6 @@
 
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
 
-#include "../../events/SDL_events_c.h"
 #include "../SDL_sysvideo.h"
 #include "SDL_hints.h"
 #include "SDL_timer.h"
@@ -98,7 +97,7 @@ const char *WaylandWebOS_CreateExportedWindow(_THIS, SDL_webOSExportedWindowType
         SDL_Delay(10);
         WAYLAND_wl_display_dispatch(data->display);
     }
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Created exported window %s", foreign_window->window_id);
+    SDL_LogInfo(SDL_LOG_CATEGORY_VIDEO, "Created exported window %s", foreign_window->window_id);
     SDL_UnlockMutex(_this->webos_foreign_lock);
     return foreign_window->window_id;
 }
@@ -241,9 +240,15 @@ SDL_bool WaylandWebOS_ExportedSetProperty(_THIS, const char *windowId, const cha
 void WaylandWebOS_DestroyExportedWindow(_THIS, const char *windowId)
 {
     SDL_VideoData *data = _this->driverdata;
-    if (data == NULL || windowId == NULL) {
+    if (windowId == NULL) {
+        SDL_SetError("Failed destroying exported window: Invalid window id");
         return;
     }
+    if (data == NULL) {
+        SDL_SetError("Failed destroying exported window: No video driver data for video device");
+        return;
+    }
+    SDL_LogInfo(SDL_LOG_CATEGORY_VIDEO, "Destroying exported window %s", windowId);
     SDL_LockMutex(_this->webos_foreign_lock);
     if (data->webos_foreign_table->count != 0) {
         webos_foreign_window *prev = NULL;
