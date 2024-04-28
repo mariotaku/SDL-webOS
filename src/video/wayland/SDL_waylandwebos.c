@@ -38,6 +38,7 @@ static const char* webos_window_hints[] = {
     SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_EXIT,
     SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_HOME,
     SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_GUIDE,
+    SDL_HINT_WEBOS_ACCESS_POLICY_RIBBON,
     SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE,
     SDL_HINT_WEBOS_CURSOR_FREQUENCY,
     SDL_HINT_WEBOS_CURSOR_SLEEP_TIME,
@@ -128,6 +129,9 @@ int WaylandWebOS_SetupSurface(_THIS, SDL_WindowData *data)
     if (SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_GUIDE, SDL_FALSE)) {
         wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_KEYS_GUIDE", "true");
     }
+    if (SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_RIBBON, SDL_TRUE)) {
+        wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_RIBBON", "true");
+    }
     if(SDL_GetHintBoolean(SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE, SDL_FALSE)) {
         wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "restore_cursor_position", "true");
     }
@@ -217,6 +221,9 @@ static void WindowHintsCallback(void *userdata, const char *name, const char *ol
     } else if (SDL_strcmp(name, SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_GUIDE) == 0) {
         wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_KEYS_GUIDE",
                                             SDL_GetStringBoolean(newValue, SDL_FALSE) ? "true" : "false");
+    } else if (SDL_strcmp(name, SDL_HINT_WEBOS_ACCESS_POLICY_RIBBON) == 0) {
+        wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_RIBBON",
+                                            SDL_GetStringBoolean(newValue, SDL_TRUE) ? "true" : "false");
     } else if (SDL_strcmp(name, SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE) == 0) {
         wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "restore_cursor_position",
                                             SDL_GetStringBoolean(newValue, SDL_FALSE) ? "true" : "false");

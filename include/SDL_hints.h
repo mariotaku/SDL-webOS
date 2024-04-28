@@ -2709,8 +2709,18 @@ extern "C" {
  * \brief  A variable that decides whether to let the app handle exit key (long-pressing back for magic remotes).
  */
 #define SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_EXIT "SDL_WEBOS_ACCESS_POLICY_KEYS_EXIT"
+/**
+ * \brief  A variable that decides whether to let the app handle home key. (L_Super on keyboard)
+ */
 #define SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_HOME "SDL_WEBOS_ACCESS_POLICY_KEYS_HOME"
+/**
+ * \brief  A variable that decides whether to let the app handle TV guide key.
+ */
 #define SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_GUIDE "SDL_WEBOS_ACCESS_POLICY_KEYS_GUIDE"
+/**
+ * \brief  A variable that decides whether to let the app allow ribbon (home launcher).
+ */
+#define SDL_HINT_WEBOS_ACCESS_POLICY_RIBBON "SDL_WEBOS_ACCESS_POLICY_RIBBON"
 /**
  * \brief A variable that decides how long till the cursor is hidden in milliseconds.
  */
