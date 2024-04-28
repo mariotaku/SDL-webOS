@@ -804,6 +804,8 @@ static void LINUX_InotifyJoystickDetect(void)
 }
 #endif /* HAVE_INOTIFY */
 
+#if !defined(__WEBOS__)
+
 static int get_event_joystick_index(int event)
 {
     int joystick_index = -1;
@@ -947,6 +949,8 @@ static void LINUX_ScanInputDevices(void)
     }
     free(entries); /* This should NOT be SDL_free() */
 }
+
+#endif
 
 static void LINUX_FallbackJoystickDetect(void)
 {
