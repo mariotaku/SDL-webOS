@@ -2710,6 +2710,7 @@ extern "C" {
  */
 #define SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_EXIT "SDL_WEBOS_ACCESS_POLICY_KEYS_EXIT"
 #define SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_HOME "SDL_WEBOS_ACCESS_POLICY_KEYS_HOME"
+#define SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_GUIDE "SDL_WEBOS_ACCESS_POLICY_KEYS_GUIDE"
 /**
  * \brief A variable that decides how long till the cursor is hidden in milliseconds.
  */
