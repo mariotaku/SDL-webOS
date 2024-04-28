@@ -129,8 +129,8 @@ int WaylandWebOS_SetupSurface(_THIS, SDL_WindowData *data)
     if (SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_GUIDE, SDL_FALSE)) {
         wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_KEYS_GUIDE", "true");
     }
-    if (SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_RIBBON, SDL_TRUE)) {
-        wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_RIBBON", "true");
+    if (!SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_RIBBON, SDL_TRUE)) {
+        wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_RIBBON", "false");
     }
     if(SDL_GetHintBoolean(SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE, SDL_FALSE)) {
         wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "restore_cursor_position", "true");
