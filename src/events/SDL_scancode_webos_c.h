@@ -24,6 +24,10 @@
 
 #if SDL_VIDEO_DRIVER_WAYLAND_WEBOS
 
+/**
+ * Get SDL_Scancode from wayland keycode.
+ * The mapping can be found in /usr/share/X11/xkb/keycodes/lg
+ */
 extern SDL_Scancode SDL_GetWebOSScancode(int keycode);
 
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */

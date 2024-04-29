@@ -213,7 +213,7 @@ int SDL_MouseInit(void)
 
     mouse->cursor_shown = SDL_TRUE;
 
-    #if __WEBOS__
+    #ifdef __WEBOS__
         {
             SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(0, 1, 1, 32, SDL_PIXELFORMAT_RGBA32);
             SDL_memset(surface->pixels, 0, (size_t)surface->h * surface->pitch);

@@ -30,6 +30,10 @@ SDL_Scancode SDL_GetWebOSScancode(int keycode)
         return SDL_SCANCODE_WEBOS_BACK;
     case 182:
         return SDL_SCANCODE_WEBOS_EXIT;
+    case 370:
+        return SDL_SCANCODE_WEBOS_GUIDE;
+    case 781:
+        return SDL_SCANCODE_WEBOS_HOME;
     case 406:
         return SDL_SCANCODE_WEBOS_RED;
     case 407:
@@ -54,8 +58,9 @@ SDL_Scancode SDL_GetWebOSScancode(int keycode)
         return SDL_SCANCODE_AUDIOREWIND;
     case 216:
         return SDL_SCANCODE_AUDIOFASTFORWARD;
+    default:
+        return SDL_SCANCODE_UNKNOWN;
     }
-    return SDL_SCANCODE_UNKNOWN;
 }
 
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
