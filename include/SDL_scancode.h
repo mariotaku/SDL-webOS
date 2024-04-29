@@ -429,6 +429,13 @@ typedef enum
 
     /* Add any other keys here. */
 
+    /**
+     * \name webOS keys
+     *
+     * These are values that are used on webOS.
+     * The mapping can be found in decompiled keyboard_handle_key function as a series of int arrays.
+     */
+    /* @{ */
     SDL_SCANCODE_WEBOS_1 = 340,
     SDL_SCANCODE_WEBOS_2 = 341,
     SDL_SCANCODE_WEBOS_3 = 342,
@@ -453,7 +460,7 @@ typedef enum
     SDL_SCANCODE_WEBOS_BLUE = 489 /**< webOS remote blue button */,
     SDL_SCANCODE_WEBOS_GUIDE = 495 /**< webOS remote guide button */,
     SDL_SCANCODE_WEBOS_EXIT = 505 /**< webOS remote exit button */,
-
+    /* @} *//* webOS keys */
 
     SDL_NUM_SCANCODES = 512 /**< not a key, just marks the number of scancodes
                                  for array bounds */

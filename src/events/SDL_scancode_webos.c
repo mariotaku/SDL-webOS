@@ -58,8 +58,9 @@ SDL_Scancode SDL_GetWebOSScancode(int keycode)
         return SDL_SCANCODE_AUDIOREWIND;
     case 216:
         return SDL_SCANCODE_AUDIOFASTFORWARD;
+    default:
+        return SDL_SCANCODE_UNKNOWN;
     }
-    return SDL_SCANCODE_UNKNOWN;
 }
 
 #endif /* __WEBOS__ */
