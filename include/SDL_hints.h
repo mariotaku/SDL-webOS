@@ -2481,7 +2481,7 @@ extern "C" {
  * handle game controller input by themselves. But the behavior can be disabled by setting this hint to "false".
  */
 #define SDL_HINT_WEBOS_CLOUDGAME_ACTIVE "SDL_WEBOS_CLOUDGAME_ACTIVE"
-#define SDL_HINT_WEBOS_HIDAPI_IGNORE_BLUETOOTH_DEVICES  "SDL_EBOS_HIDAPI_IGNORE_BLUETOOTH_DEVICES"
+#define SDL_HINT_WEBOS_HIDAPI_IGNORE_BLUETOOTH_DEVICES  "SDL_WEBOS_HIDAPI_IGNORE_BLUETOOTH_DEVICES"
 
 /**
  *  \brief  An enumeration of hint priorities
