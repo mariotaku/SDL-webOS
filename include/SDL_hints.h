@@ -2718,6 +2718,11 @@ extern "C" {
  */
 #define SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_GUIDE "SDL_WEBOS_ACCESS_POLICY_KEYS_GUIDE"
 /**
+ * \brief  A variable that decides whether to let the app handle meta key.
+ * This hint is only available on webOS 8 or later.
+ */
+#define SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_META "SDL_WEBOS_ACCESS_POLICY_KEYS_META"
+/**
  * \brief  A variable that decides whether to let the app allow ribbon (home launcher).
  */
 #define SDL_HINT_WEBOS_ACCESS_POLICY_RIBBON "SDL_WEBOS_ACCESS_POLICY_RIBBON"

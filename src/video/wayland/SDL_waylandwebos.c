@@ -33,11 +33,12 @@
 #include "SDL_waylandwebos_foreign.h"
 #include "webos-shell-client-protocol.h"
 
-static const char* webos_window_hints[] = {
+static const char *webos_window_hints[] = {
     SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_BACK,
     SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_EXIT,
     SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_HOME,
     SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_GUIDE,
+    SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_META,
     SDL_HINT_WEBOS_ACCESS_POLICY_RIBBON,
     SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE,
     SDL_HINT_WEBOS_CURSOR_FREQUENCY,
@@ -76,7 +77,7 @@ void WaylandWebOS_VideoInit(_THIS)
         _this->webos_cursor_sleep_time = 300000;
     }
 
-    for(int i = 0; webos_window_hints[i] != NULL; i++) {
+    for (int i = 0; webos_window_hints[i] != NULL; i++) {
         SDL_AddHintCallback(webos_window_hints[i], WindowHintsCallback, _this);
     }
 }
@@ -110,7 +111,7 @@ void WaylandWebOS_VideoCleanUp(_THIS)
 int WaylandWebOS_SetupSurface(_THIS, SDL_WindowData *data)
 {
     const char *appId;
-    const char* hintValue;
+    const char *hintValue;
     appId = SDL_getenv("APPID");
     if (appId == NULL) {
         return SDL_SetError("APPID environment variable is not set");
@@ -129,13 +130,16 @@ int WaylandWebOS_SetupSurface(_THIS, SDL_WindowData *data)
     if (SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_GUIDE, SDL_FALSE)) {
         wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_KEYS_GUIDE", "true");
     }
+    if (SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_META, SDL_FALSE)) {
+        wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_KEYS_META", "true");
+    }
     if (!SDL_GetHintBoolean(SDL_HINT_WEBOS_ACCESS_POLICY_RIBBON, SDL_TRUE)) {
         wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_RIBBON", "false");
     }
-    if(SDL_GetHintBoolean(SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE, SDL_FALSE)) {
+    if (SDL_GetHintBoolean(SDL_HINT_WEBOS_CURSOR_CALIBRATION_DISABLE, SDL_FALSE)) {
         wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "restore_cursor_position", "true");
     }
-    if(SDL_GetHintBoolean(SDL_HINT_WEBOS_CLOUDGAME_ACTIVE, SDL_TRUE)) {
+    if (SDL_GetHintBoolean(SDL_HINT_WEBOS_CLOUDGAME_ACTIVE, SDL_TRUE)) {
         wl_webos_shell_surface_set_property(data->shell_surface.webos.webos, "cloudgame_active", "true");
     }
     if ((hintValue = SDL_GetHint(SDL_HINT_WEBOS_CURSOR_FREQUENCY)) != NULL) {
@@ -200,7 +204,7 @@ static void webos_shell_handle_state_about_to_change(void *data, struct wl_webos
 static void WindowHintsCallback(void *userdata, const char *name, const char *oldValue, const char *newValue)
 {
     SDL_VideoDevice *_this = userdata;
-    SDL_Window * windows = _this->windows;
+    SDL_Window *windows = _this->windows;
     SDL_WindowData *win_data;
     if (windows == NULL) {
         return;
@@ -209,7 +213,7 @@ static void WindowHintsCallback(void *userdata, const char *name, const char *ol
     if (win_data == NULL) {
         return;
     }
-    if (SDL_strcmp(name, SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_BACK) == 0 ) {
+    if (SDL_strcmp(name, SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_BACK) == 0) {
         wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_KEYS_BACK",
                                             SDL_GetStringBoolean(newValue, SDL_FALSE) ? "true" : "false");
     } else if (SDL_strcmp(name, SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_EXIT) == 0) {
@@ -220,6 +224,9 @@ static void WindowHintsCallback(void *userdata, const char *name, const char *ol
                                             SDL_GetStringBoolean(newValue, SDL_FALSE) ? "true" : "false");
     } else if (SDL_strcmp(name, SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_GUIDE) == 0) {
         wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_KEYS_GUIDE",
+                                            SDL_GetStringBoolean(newValue, SDL_FALSE) ? "true" : "false");
+    } else if (SDL_strcmp(name, SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_META) == 0) {
+        wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_KEYS_META",
                                             SDL_GetStringBoolean(newValue, SDL_FALSE) ? "true" : "false");
     } else if (SDL_strcmp(name, SDL_HINT_WEBOS_ACCESS_POLICY_RIBBON) == 0) {
         wl_webos_shell_surface_set_property(win_data->shell_surface.webos.webos, "_WEBOS_ACCESS_POLICY_RIBBON",
