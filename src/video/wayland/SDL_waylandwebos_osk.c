@@ -253,6 +253,9 @@ void osk_leave(void *data, struct text_model *text_model)
     }
     osk_data->state = 0;
     osk_data->text_model = NULL;
+
+    (void)SDL_EventState(SDL_TEXTINPUT, SDL_DISABLE);
+    (void)SDL_EventState(SDL_TEXTEDITING, SDL_DISABLE);
 }
 
 void osk_input_panel_state(void *data, struct text_model *text_model, uint32_t state)
@@ -265,6 +268,9 @@ void osk_input_panel_state(void *data, struct text_model *text_model, uint32_t s
     if (state == 0) {
         text_model_deactivate(text_model, osk_data->seat);
         osk_data->text_model = NULL;
+
+        (void)SDL_EventState(SDL_TEXTINPUT, SDL_DISABLE);
+        (void)SDL_EventState(SDL_TEXTEDITING, SDL_DISABLE);
     }
 }
 
