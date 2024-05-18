@@ -34,6 +34,7 @@
 
 struct webos_osk_data
 {
+    struct wl_seat *seat;
     struct text_model *text_model;
     uint32_t index;
     uint32_t length;
@@ -139,6 +140,7 @@ static SDL_bool ensureTextModel(SDL_VideoData *waylandData)
     struct webos_osk_data *osk_data = waylandData->webos_screen_keyboard_data;
     if (osk_data == NULL) {
         osk_data = SDL_calloc(1, sizeof(struct webos_osk_data));
+        osk_data->seat = waylandData->input->seat;
         waylandData->webos_screen_keyboard_data = osk_data;
     } else if (osk_data->text_model != NULL) {
         return SDL_TRUE;
@@ -261,6 +263,7 @@ void osk_input_panel_state(void *data, struct text_model *text_model, uint32_t s
     }
     osk_data->state = state;
     if (state == 0) {
+        text_model_deactivate(text_model, osk_data->seat);
         osk_data->text_model = NULL;
     }
 }
