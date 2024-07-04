@@ -23,40 +23,62 @@
 #ifdef __WEBOS__
 #include "SDL_scancode_webos_c.h"
 
+/**
+ * Extracted from \p /usr/share/X11/xkb/keycodes/lg
+ */
+enum {
+    IR_KEY_STOP = 136,
+    IR_KEY_REW = 176,
+    IR_KEY_EXIT = 182,
+    IR_KEY_PLAY = 215,
+    IR_KEY_FF = 216,
+    IR_KEY_GUIDE = 370,
+    IR_KEY_RED = 406,
+    IR_KEY_GREEN = 407,
+    IR_KEY_YELLOW = 408,
+    IR_KEY_BLUE = 409,
+    IR_KEY_CH_UP = 410,
+    IR_KEY_CH_DOWN = 411,
+    IR_KEY_BACK = 420,
+    IR_KEY_HOME = 781,
+    IR_KEY_GOTOPREV = 821,
+    IR_KEY_GOTONEXT = 822,
+};
+
 SDL_Scancode SDL_GetWebOSScancode(int keycode)
 {
     switch (keycode) {
-    case 420:
+    case IR_KEY_BACK:
         return SDL_SCANCODE_WEBOS_BACK;
-    case 182:
+    case IR_KEY_EXIT:
         return SDL_SCANCODE_WEBOS_EXIT;
-    case 370:
+    case IR_KEY_GUIDE:
         return SDL_SCANCODE_WEBOS_GUIDE;
-    case 781:
+    case IR_KEY_HOME:
         return SDL_SCANCODE_WEBOS_HOME;
-    case 406:
+    case IR_KEY_RED:
         return SDL_SCANCODE_WEBOS_RED;
-    case 407:
+    case IR_KEY_GREEN:
         return SDL_SCANCODE_WEBOS_GREEN;
-    case 408:
+    case IR_KEY_YELLOW:
         return SDL_SCANCODE_WEBOS_YELLOW;
-    case 409:
+    case IR_KEY_BLUE:
         return SDL_SCANCODE_WEBOS_BLUE;
-    case 410:
+    case IR_KEY_CH_UP:
         return SDL_SCANCODE_WEBOS_CH_UP;
-    case 411:
+    case IR_KEY_CH_DOWN:
         return SDL_SCANCODE_WEBOS_CH_DOWN;
-    case 215:
+    case IR_KEY_PLAY:
         return SDL_SCANCODE_AUDIOPLAY;
-    case 136:
+    case IR_KEY_STOP:
         return SDL_SCANCODE_AUDIOSTOP;
-    case 821:
+    case IR_KEY_GOTOPREV:
         return SDL_SCANCODE_AUDIOPREV;
-    case 822:
+    case IR_KEY_GOTONEXT:
         return SDL_SCANCODE_AUDIONEXT;
-    case 176:
+    case IR_KEY_REW:
         return SDL_SCANCODE_AUDIOREWIND;
-    case 216:
+    case IR_KEY_FF:
         return SDL_SCANCODE_AUDIOFASTFORWARD;
     default:
         return SDL_SCANCODE_UNKNOWN;
