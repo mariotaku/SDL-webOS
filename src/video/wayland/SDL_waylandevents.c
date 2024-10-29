@@ -2674,13 +2674,17 @@ void Wayland_display_destroy_input(SDL_VideoData *d)
     }
 
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (input->webos_seat) {
+        wl_webos_seat_destroy(input->webos_seat);
+    }
+
     /* Use recursive call to free up linked list */
     /* Extremely evil but prevents goto usages and large changes */
     if (input->next) {
         d->input = input->next;
         Wayland_display_destroy_input(d);
     }
-#endif
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
 
     SDL_free(input);
     d->input = NULL;

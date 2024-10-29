@@ -67,8 +67,10 @@ typedef struct
 #ifdef HAVE_LIBDECOR_H
         struct libdecor *libdecor;
 #endif
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
         struct wl_shell *wl;
         struct wl_webos_shell *webos;
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
     } shell;
     struct zwp_relative_pointer_manager_v1 *relative_pointer_manager;
     struct zwp_pointer_constraints_v1 *pointer_constraints;

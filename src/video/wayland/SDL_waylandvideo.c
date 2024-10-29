@@ -1183,6 +1183,17 @@ static void Wayland_VideoCleanup(_THIS)
         data->shell.xdg = NULL;
     }
 
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    if (data->shell.wl) {
+        wl_shell_destroy(data->shell.wl);
+        data->shell.wl = NULL;
+    }
+    if (data->shell.webos) {
+        wl_webos_shell_destroy(data->shell.webos);
+        data->shell.webos = NULL;
+    }
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
+
     if (data->decoration_manager) {
         zxdg_decoration_manager_v1_destroy(data->decoration_manager);
         data->decoration_manager = NULL;

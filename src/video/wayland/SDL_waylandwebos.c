@@ -32,6 +32,10 @@
 #include "SDL_waylandwebos.h"
 #include "SDL_waylandwebos_foreign.h"
 #include "webos-shell-client-protocol.h"
+#include "webos-input-manager-client-protocol.h"
+#include "webos-foreign-client-protocol.h"
+#include "starfish-client-protocol.h"
+#include "text-client-protocol.h"
 
 static const char *webos_window_hints[] = {
     SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_BACK,
@@ -102,6 +106,26 @@ void WaylandWebOS_VideoCleanUp(_THIS)
     }
     SDL_UnlockMutex(_this->webos_foreign_lock);
     SDL_DestroyMutex(_this->webos_foreign_lock);
+
+    if (data->webos_foreign) {
+        wl_webos_foreign_destroy(data->webos_foreign);
+        data->webos_foreign = NULL;
+    }
+
+    if (data->webos_input_manager) {
+        wl_webos_input_manager_destroy(data->webos_input_manager);
+        data->webos_input_manager = NULL;
+    }
+
+    if (data->starfish_pointer) {
+        wl_starfish_pointer_destroy(data->starfish_pointer);
+        data->starfish_pointer = NULL;
+    }
+
+    if (data->text_model_factory) {
+        text_model_factory_destroy(data->text_model_factory);
+        data->text_model_factory = NULL;
+    }
 
     if (data->webos_screen_keyboard_data != NULL) {
         SDL_free(data->webos_screen_keyboard_data);
