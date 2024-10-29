@@ -150,6 +150,19 @@ static void png_read_data(png_structp ctx, png_bytep area, png_size_t size)
     src = (SDL_RWops *)lib.png_get_io_ptr(ctx);
     SDL_RWread(src, area, size, 1);
 }
+
+static void png_log_error(png_structp ctx, png_const_charp msg)
+{
+    (void) ctx;
+    SDL_LogError(SDL_LOG_CATEGORY_SYSTEM, "libpng warning: %s", msg);
+}
+
+static void png_log_warn(png_structp ctx, png_const_charp msg)
+{
+    (void) ctx;
+    SDL_LogWarn(SDL_LOG_CATEGORY_SYSTEM, "libpng warning: %s", msg);
+}
+
 SDL_Surface *IMG_LoadPNG_RW(SDL_RWops *src)
 {
     Sint64 start;
@@ -182,7 +195,7 @@ SDL_Surface *IMG_LoadPNG_RW(SDL_RWops *src)
 
     /* Create the PNG loading context structure */
     png_ptr = lib.png_create_read_struct(PNG_LIBPNG_VER_STRING,
-                      NULL,NULL,NULL);
+                      NULL,png_log_error,png_log_warn);
     if (png_ptr == NULL){
         error = "Couldn't allocate memory for PNG file or incompatible PNG dll";
         goto done;
