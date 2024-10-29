@@ -632,6 +632,7 @@ static int Wayland_ShowCursor(SDL_Cursor *cursor)
     while (curr) {
         if (curr->pointer_focus && focus == curr->pointer_focus->sdlwindow) {
             pointer_enter_serial = curr->pointer_enter_serial;
+            pointer = curr->pointer;
             break;
         }
         curr = curr->next;
