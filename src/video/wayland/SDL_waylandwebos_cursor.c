@@ -7,6 +7,7 @@
 #include "../../core/webos/SDL_webos_luna.h"
 #include "../../core/webos/SDL_webos_json.h"
 #include "../../core/webos/SDL_webos_png.h"
+#include "../../events/SDL_mouse_c.h"
 
 char WaylandWebOS_GetCursorSize()
 {
@@ -59,6 +60,18 @@ SDL_Surface *WaylandWebOS_LoadCursorSurface(const char *type, const char *state)
         return NULL;
     }
     return surface;
+}
+
+SDL_Cursor *WaylandWebOS_ObtainHiddenCursor()
+{
+    SDL_Mouse *mouse = SDL_GetMouse();
+    if (!mouse->hidden_cursor) {
+        SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(0, 1, 1, 32, SDL_PIXELFORMAT_ARGB8888);
+        SDL_memset(surface->pixels, 0, (size_t)surface->h * surface->pitch);
+        mouse->hidden_cursor = SDL_CreateColorCursor(surface, 0, 0);
+        SDL_FreeSurface(surface);
+    }
+    return mouse->hidden_cursor;
 }
 
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */

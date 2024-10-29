@@ -205,6 +205,66 @@ static SDL_bool wayland_get_system_cursor(SDL_VideoData *vdata, Wayland_CursorDa
     SDL_WindowData *focusdata;
     int i;
 
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    SDL_Mouse *mouse = SDL_GetMouse();
+    SDL_Surface *surface = NULL;
+    SDL_Cursor *temp_cursor;
+    Wayland_CursorData *temp_data;
+
+    int hot_pos;
+
+    switch (cdata->system_cursor) {
+    case SDL_SYSTEM_CURSOR_ARROW:
+        hot_pos = 0;
+        surface = WaylandWebOS_LoadCursorSurface("A", "N");
+        break;
+    case SDL_SYSTEM_CURSOR_IBEAM:
+        hot_pos = 0;
+        surface = WaylandWebOS_LoadCursorSurface("TEXT", "N");
+        break;
+    case SDL_SYSTEM_CURSOR_HAND:
+        hot_pos = 0;
+        surface = WaylandWebOS_LoadCursorSurface("POINT", "N");
+        break;
+    case SDL_SYSTEM_CURSOR_NO:
+        hot_pos = 0;
+        surface = WaylandWebOS_LoadCursorSurface("Disable", "N");
+        break;
+    case SDL_SYSTEM_CURSOR_SIZENWSE:
+    case SDL_SYSTEM_CURSOR_SIZENESW:
+    case SDL_SYSTEM_CURSOR_SIZEWE:
+    case SDL_SYSTEM_CURSOR_SIZENS:
+    case SDL_SYSTEM_CURSOR_SIZEALL:
+        hot_pos = 0;
+        surface = WaylandWebOS_LoadCursorSurface("HOLD", "N");
+        break;
+    default:
+        break;
+    }
+    if (surface) {
+        *scale = 1;
+        /* Create a temporary cursor with the surface, and move the data to the real cursor */
+        temp_cursor = mouse->CreateCursor(surface, hot_pos, hot_pos);
+        temp_data = (Wayland_CursorData *)temp_cursor->driverdata;
+
+        cdata->bitmap = surface;
+        cdata->hot_x = temp_data->hot_x;
+        cdata->hot_y = temp_data->hot_y;
+        cdata->w = temp_data->w;
+        cdata->h = temp_data->h;
+        cdata->buffer = temp_data->buffer;
+        cdata->shm_data = temp_data->shm_data;
+        cdata->shm_data_size = temp_data->shm_data_size;
+
+        temp_data->buffer = NULL;
+        temp_data->shm_data = NULL;
+        temp_data->shm_data_size = 0;
+        mouse->FreeCursor(temp_cursor);
+        return SDL_TRUE;
+    }
+
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
+
     /*
      * GNOME based desktops expose the cursor size and theme via the
      * org.freedesktop.portal.Settings interface of the xdg-desktop portal.
@@ -484,38 +544,6 @@ static SDL_Cursor *Wayland_CreateCursor(SDL_Surface *surface, int hot_x, int hot
 
 static SDL_Cursor *Wayland_CreateSystemCursor(SDL_SystemCursor id)
 {
-#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
-    SDL_Cursor *cursor;
-    int hot_pos = 0;
-    SDL_Surface *surface = NULL;
-    switch (id) {
-        case SDL_SYSTEM_CURSOR_ARROW:
-            hot_pos = 0;
-            surface = WaylandWebOS_LoadCursorSurface("A", "N");
-            break;
-        case SDL_SYSTEM_CURSOR_HAND:
-            hot_pos = 0;
-            surface = WaylandWebOS_LoadCursorSurface("POINT", "N");
-            break;
-        case SDL_SYSTEM_CURSOR_NO:
-            hot_pos = 0;
-            surface = WaylandWebOS_LoadCursorSurface("Disable", "N");
-            break;
-        default:
-            hot_pos = 0xff;
-            surface = WaylandWebOS_LoadCursorSurface("A", "N");
-            break;
-    }
-    if (!surface) {
-        return NULL;
-    }
-    cursor = Wayland_CreateCursor(surface, hot_pos, hot_pos);
-    if (cursor) {
-        Wayland_CursorData *cdata = cursor->driverdata;
-        cdata->bitmap = surface;
-    }
-    return cursor;
-#else
     SDL_VideoData *data = SDL_GetVideoDevice()->driverdata;
     SDL_Cursor *cursor;
 
@@ -541,7 +569,6 @@ static SDL_Cursor *Wayland_CreateSystemCursor(SDL_SystemCursor id)
     }
 
     return cursor;
-#endif
 }
 
 static SDL_Cursor *Wayland_CreateDefaultCursor()
@@ -594,8 +621,22 @@ static int Wayland_ShowCursor(SDL_Cursor *cursor)
     SDL_VideoDevice *vd = SDL_GetVideoDevice();
     SDL_VideoData *d = vd->driverdata;
     struct SDL_WaylandInput *input = d->input;
+    uint32_t pointer_enter_serial = input->pointer_enter_serial;
     struct wl_pointer *pointer = d->pointer;
     float scale = 1.0f;
+
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    SDL_Window *focus = SDL_GetMouse()->focus;
+    struct SDL_WaylandInput *curr = d->input;
+    while (curr) {
+        if (curr->pointer_focus && focus == curr->pointer_focus->sdlwindow) {
+            pointer_enter_serial = curr->pointer_enter_serial;
+            break;
+        }
+        curr = curr->next;
+    }
+#endif
 
     if (!pointer) {
         return -1;
@@ -615,7 +656,7 @@ static int Wayland_ShowCursor(SDL_Cursor *cursor)
             wl_surface_set_buffer_scale(data->surface, scale);
         }
         wl_pointer_set_cursor(pointer,
-                              input->pointer_enter_serial,
+                              pointer_enter_serial,
                               data->surface,
                               data->hot_x / scale,
                               data->hot_y / scale);
@@ -634,15 +675,15 @@ static int Wayland_ShowCursor(SDL_Cursor *cursor)
         input->cursor_visible = SDL_FALSE;
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
         {
-            SDL_Cursor *hidden_cur = SDL_GetMouse()->hidden_cursor;
+            SDL_Cursor *hidden_cur = WaylandWebOS_ObtainHiddenCursor();
             Wayland_CursorData *data = hidden_cur->driverdata;
-            wl_pointer_set_cursor(pointer, input->pointer_enter_serial, data->surface, 0, 0);
+            wl_pointer_set_cursor(pointer, pointer_enter_serial, data->surface, 0, 0);
             wl_surface_attach(data->surface, data->buffer, 0, 0);
             wl_surface_damage(data->surface, 0, 0, data->w, data->h);
             wl_surface_commit(data->surface);
         }
 #else
-        wl_pointer_set_cursor(pointer, input->pointer_enter_serial, NULL, 0, 0);
+        wl_pointer_set_cursor(pointer, pointer_enter_serial, NULL, 0, 0);
 #endif
     }
 
