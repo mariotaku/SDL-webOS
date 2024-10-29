@@ -897,8 +897,6 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
         d->compositor = wl_registry_bind(d->registry, id, &wl_compositor_interface, SDL_min(4, version));
     } else if (SDL_strcmp(interface, "wl_output") == 0) {
         Wayland_add_display(d, id, version);
-    } else if (SDL_strcmp(interface, "wl_shell") == 0) {
-        d->shell.wl = wl_registry_bind(d->registry, id, &wl_shell_interface, 1);
     } else if (SDL_strcmp(interface, "wl_seat") == 0) {
         Wayland_display_add_input(d, id, version);
     } else if (SDL_strcmp(interface, "xdg_wm_base") == 0) {
@@ -949,6 +947,8 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
         qt_windowmanager_add_listener(d->windowmanager, &windowmanager_listener, d);
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH */
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    } else if (SDL_strcmp(interface, "wl_shell") == 0) {
+        d->shell.wl = wl_registry_bind(d->registry, id, &wl_shell_interface, 1);
     } else if (SDL_strcmp(interface, "wl_webos_shell") == 0) {
         d->shell.webos = wl_registry_bind(registry, id, &wl_webos_shell_interface, 1);
     } else if (SDL_strcmp(interface, "wl_webos_foreign") == 0) {
