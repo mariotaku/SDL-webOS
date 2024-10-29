@@ -55,10 +55,7 @@ SDL_Surface *WaylandWebOS_LoadCursorSurface(const char *type, const char *state)
         return NULL;
     }
     surface = IMG_LoadPNG_RW(rw);
-    if (surface == NULL) {
-        SDL_RWclose(rw);
-        return NULL;
-    }
+    SDL_RWclose(rw);
     return surface;
 }
 
