@@ -211,7 +211,7 @@ int SDL_InitSubSystem(Uint32 flags)
         SDL_webOSInitLSHandle();
         if (!SDL_webOSAppRegistered()) {
             if (SDL_webOSRegisterApp() != 0) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to register app");
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to register app: %s", SDL_GetError());
             }
         }
     }

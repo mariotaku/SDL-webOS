@@ -1024,6 +1024,32 @@ SDL_bool Wayland_LoadLibdecor(SDL_VideoData *data, SDL_bool ignore_xdg)
     return SDL_FALSE;
 }
 
+static void Wayland_LogXKBMessage(struct xkb_context *context, enum xkb_log_level level, const char *format, va_list args)
+{
+    char msgbuf[1024];
+    SDL_LogPriority sdlLevel;
+    (void)context;
+    switch (level) {
+        case XKB_LOG_LEVEL_CRITICAL:
+        case XKB_LOG_LEVEL_ERROR:
+            sdlLevel = SDL_LOG_PRIORITY_ERROR;
+            break;
+        case XKB_LOG_LEVEL_WARNING:
+            sdlLevel = SDL_LOG_PRIORITY_WARN;
+            break;
+        case XKB_LOG_LEVEL_INFO:
+            sdlLevel = SDL_LOG_PRIORITY_INFO;
+            break;
+        case XKB_LOG_LEVEL_DEBUG:
+            sdlLevel = SDL_LOG_PRIORITY_DEBUG;
+            break;
+        default:
+            return;
+    }
+    SDL_vsnprintf(msgbuf, sizeof(msgbuf), format, args);
+    SDL_LogMessage(SDL_LOG_CATEGORY_VIDEO, sdlLevel, "xkbcommon: %s", msgbuf);
+}
+
 int Wayland_VideoInit(_THIS)
 {
     SDL_VideoData *data = (SDL_VideoData *)_this->driverdata;
@@ -1032,6 +1058,7 @@ int Wayland_VideoInit(_THIS)
     if (!data->xkb_context) {
         return SDL_SetError("Failed to create XKB context");
     }
+    WAYLAND_xkb_context_set_log_fn(data->xkb_context, Wayland_LogXKBMessage);
 
     data->registry = wl_display_get_registry(data->display);
     if (!data->registry) {

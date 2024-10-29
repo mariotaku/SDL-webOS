@@ -65,6 +65,7 @@ SDL_bool SDL_webOSAppRegistered()
 
 int SDL_webOSRegisterApp()
 {
+    int ret = 0;
     if (s_appRegistered) {
         return 0;
     }
@@ -72,10 +73,12 @@ int SDL_webOSRegisterApp()
         const char *appId = SDL_getenv("APPID");
         s_nativeLifeCycleInterfaceVersion = getNativeLifeCycleInterfaceVersion(appId);
         if (s_nativeLifeCycleInterfaceVersion == -1) {
-            return SDL_SetError("Failed to get nativeLifeCycleInterfaceVersion: %s", SDL_GetError());
+            char errbuf[1024];
+            SDL_GetErrorMsg(errbuf, 1024);
+            return SDL_SetError("Failed to get nativeLifeCycleInterfaceVersion: %s", errbuf);
         }
-        if (!registerApp(appId, s_nativeLifeCycleInterfaceVersion)) {
-            return SDL_SetError("Failed to register app");
+        if ((ret = registerApp(appId, s_nativeLifeCycleInterfaceVersion)) != 0) {
+            return ret;
         }
         if (!registerScreenSaverRequest(appId)) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Failed to register screen saver request");
@@ -165,6 +168,8 @@ static SDL_bool registerApp(const char *appId, int interfaceVersion)
 {
     const char *uri;
     char payload[200];
+    int callRet;
+
     snprintf(payload, sizeof(payload), "{\"id\":\"%s\"}", appId);
     if (interfaceVersion == 1) {
         s_AppLifecycleContext.callback = lifecycleCallbackVersion1;
@@ -175,7 +180,11 @@ static SDL_bool registerApp(const char *appId, int interfaceVersion)
     } else {
         return SDL_FALSE;
     }
-    return HELPERS_HLunaServiceCall(uri, payload, &s_AppLifecycleContext) == 0;
+    if ((callRet = HELPERS_HLunaServiceCall(uri, payload, &s_AppLifecycleContext)) != 0) {
+        SDL_SetError("Failed to call %s: (%d) %s", uri, callRet, HELPERS_HGetError(callRet));
+        return SDL_FALSE;
+    }
+    return SDL_TRUE;
 }
 
 static int lifecycleCallbackVersion1(LSHandle *sh, LSMessage *reply, HContext *ctx)
@@ -327,7 +336,6 @@ static SDL_bool turnOnScreen()
 {
     char *output = NULL;
     if (!SDL_webOSLunaServiceCallSync("luna://com.webos.service.tvpower/power/turnOnScreen", "{}", 1, &output)) {
-        SDL_SetError("Failed to call luna://com.webos.service.tvpower/power/turnOnScreen");
         return SDL_FALSE;
     }
     free(output);

@@ -137,6 +137,8 @@ SDL_WAYLAND_SYM(void, xkb_keymap_unref, (struct xkb_keymap *) )
 SDL_WAYLAND_SYM(void, xkb_state_unref, (struct xkb_state *) )
 SDL_WAYLAND_SYM(void, xkb_context_unref, (struct xkb_context *) )
 SDL_WAYLAND_SYM(struct xkb_context *, xkb_context_new, (enum xkb_context_flags flags) )
+SDL_WAYLAND_SYM(void, xkb_context_set_log_fn, (struct xkb_context *,\
+                      void (*log_fn)(struct xkb_context *, enum xkb_log_level, const char *, va_list)))
 SDL_WAYLAND_SYM(enum xkb_state_component, xkb_state_update_mask, (struct xkb_state *state,\
                       xkb_mod_mask_t depressed_mods,\
                       xkb_mod_mask_t latched_mods,\

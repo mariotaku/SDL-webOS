@@ -72,6 +72,7 @@ SDL_HELPERS_SYM(const char*, HLunaServiceMessage, (LSMessage *msg))
 SDL_HELPERS_SYM(void, HProcessAppState, (int state, void* userdata))
 SDL_HELPERS_SYM(void, HRegisterAppState, (int state, void (*callback)(int state, void *userdata)))
 SDL_HELPERS_SYM_OPT(void, HNDLSetLSHandle, (LSHandle *handle))
+SDL_HELPERS_SYM_OPT(const char*, HGetError, (int error))
 
 #undef SDL_HELPERS_SYM
 #undef SDL_HELPERS_SYM_OPT
