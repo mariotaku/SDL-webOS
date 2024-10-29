@@ -1447,9 +1447,13 @@ void Wayland_ShowWindow(_THIS, SDL_Window *window)
 
         /* Set the geometry */
         xdg_surface_set_window_geometry(data->shell_surface.xdg.surface, 0, 0, data->window_width, data->window_height);
-    } else if (c->shell.wl) {
+    }
+#ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
+    else if (c->shell.wl) {
         WAYLAND_wl_display_flush(c->display);
-    } else {
+    }
+#endif /* SDL_VIDEO_DRIVER_WAYLAND_WEBOS */
+    else {
         /* Nothing to see here, just commit. */
         wl_surface_commit(data->surface);
     }
