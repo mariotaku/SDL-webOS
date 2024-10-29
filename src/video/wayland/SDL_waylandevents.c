@@ -419,6 +419,7 @@ static void pointer_handle_motion(void *data, struct wl_pointer *pointer,
     SDL_WindowData *window = input->pointer_focus;
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
     static bool warping = false;
+    SDL_MouseID mouse_id = WAYLAND_wl_proxy_get_id((struct wl_proxy *)pointer);
     if (window && window->waylandData->relative_mouse_mode && time != input->pointer_enter_serial) {
         if (!warping) {
             SDL_VideoDisplay *display = SDL_GetDisplayForWindow(window->sdlwindow);
@@ -432,7 +433,7 @@ static void pointer_handle_motion(void *data, struct wl_pointer *pointer,
             const int dx = (int)SDL_floorf(dx_f * window->pointer_scale_x);
             const int dy = (int)SDL_floorf(dy_f * window->pointer_scale_y);
             warping = false;
-            SDL_SendMouseMotion(window->sdlwindow, 0, 1, dx, dy);
+            SDL_SendMouseMotion(window->sdlwindow, mouse_id, 1, dx, dy);
         }
         input->sx_w = sx_w;
         input->sy_w = sy_w;
@@ -446,7 +447,7 @@ static void pointer_handle_motion(void *data, struct wl_pointer *pointer,
         const float sy_f = (float)wl_fixed_to_double(sy_w);
         const int sx = (int)SDL_floorf(sx_f * window->pointer_scale_x);
         const int sy = (int)SDL_floorf(sy_f * window->pointer_scale_y);
-        SDL_SendMouseMotion(window->sdlwindow, 0, 0, sx, sy);
+        SDL_SendMouseMotion(window->sdlwindow, mouse_id, 0, sx, sy);
     }
 }
 
@@ -595,6 +596,7 @@ static void pointer_handle_button_common(struct SDL_WaylandInput *input, uint32_
 
     if (window) {
         SDL_VideoData *viddata = window->waylandData;
+        SDL_MouseID mouse_id = WAYLAND_wl_proxy_get_id((struct wl_proxy *)input->pointer);
         switch (button) {
         case BTN_LEFT:
             sdl_button = SDL_BUTTON_LEFT;
@@ -650,7 +652,7 @@ static void pointer_handle_button_common(struct SDL_WaylandInput *input, uint32_
         Wayland_data_device_set_serial(input->data_device, serial);
         Wayland_primary_selection_device_set_serial(input->primary_selection_device, serial);
 
-        SDL_SendMouseButton(window->sdlwindow, 0,
+        SDL_SendMouseButton(window->sdlwindow, mouse_id,
                             state ? SDL_PRESSED : SDL_RELEASED, sdl_button);
     }
 }
@@ -667,6 +669,7 @@ static void pointer_handle_axis_common_v1(struct SDL_WaylandInput *input,
                                           uint32_t time, uint32_t axis, wl_fixed_t value)
 {
     SDL_WindowData *window = input->pointer_focus;
+    SDL_MouseID mouse_id = WAYLAND_wl_proxy_get_id((struct wl_proxy *)input->pointer);
     enum wl_pointer_axis a = axis;
     float x, y;
 
@@ -687,7 +690,7 @@ static void pointer_handle_axis_common_v1(struct SDL_WaylandInput *input,
         x /= WAYLAND_WHEEL_AXIS_UNIT;
         y /= WAYLAND_WHEEL_AXIS_UNIT;
 
-        SDL_SendMouseWheel(window->sdlwindow, 0, x, y, SDL_MOUSEWHEEL_NORMAL);
+        SDL_SendMouseWheel(window->sdlwindow, mouse_id, x, y, SDL_MOUSEWHEEL_NORMAL);
     }
 }
 
@@ -780,6 +783,7 @@ static void pointer_handle_frame(void *data, struct wl_pointer *pointer)
 {
     struct SDL_WaylandInput *input = data;
     SDL_WindowData *window = input->pointer_focus;
+    SDL_MouseID mouse_id = WAYLAND_wl_proxy_get_id((struct wl_proxy *)pointer);
     float x, y;
 
     switch (input->pointer_curr_axis_info.x_axis_type) {
@@ -816,7 +820,7 @@ static void pointer_handle_frame(void *data, struct wl_pointer *pointer)
     SDL_memset(&input->pointer_curr_axis_info, 0, sizeof(input->pointer_curr_axis_info));
 
     if (x != 0.0f || y != 0.0f) {
-        SDL_SendMouseWheel(window->sdlwindow, 0, x, y, SDL_MOUSEWHEEL_NORMAL);
+        SDL_SendMouseWheel(window->sdlwindow, mouse_id, x, y, SDL_MOUSEWHEEL_NORMAL);
     }
 }
 
