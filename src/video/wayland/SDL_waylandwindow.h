@@ -123,6 +123,7 @@ typedef struct
     SDL_bool is_fullscreen;
     SDL_bool in_fullscreen_transition;
     Uint32 fullscreen_flags;
+    SDL_bool double_buffer;
 #ifdef SDL_VIDEO_DRIVER_WAYLAND_WEBOS
     Uint32 webos_shell_state;
 #endif
