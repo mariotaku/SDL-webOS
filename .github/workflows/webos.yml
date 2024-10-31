@@ -9,6 +9,9 @@ on:
 jobs:
   Build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        webos-abi: [ 'ON', 'OFF' ]
 
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +34,9 @@ jobs:
         run: |
           cmake -B build -S . \
             -DCMAKE_TOOLCHAIN_FILE=/tmp/arm-webos-linux-gnueabi_sdk-buildroot/share/buildroot/toolchainfile.cmake \
-            -DCMAKE_BUILD_TYPE=Release -DWEBOS=ON
+            -DCMAKE_BUILD_TYPE=Release -DWEBOS=ON -DSDL_OFFSCREEN=OFF -DSDL_DISKAUDIO=OFF \
+            -DSDL_DUMMYAUDIO=OFF -DSDL_DUMMYVIDEO=OFF -DSDL_KMSDRM=OFF -DSDL_VENDOR_INFO=webOS\ Backport \
+            -DSDL_WEBOS_BROKEN_ABI=${{ matrix.webos-abi }}
 
       - name: Build (CMake)
         run: cmake --build build/ --config Release --verbose --parallel
@@ -42,7 +47,13 @@ jobs:
         run: |
           cmake --install build/ --prefix dist
           cd dist
-          tar -czf ../SDL2-$(./bin/sdl2-config --version)-webos.tar.gz .
+          if [ "${BUILD_WEBOS_ABI}" == "ON" ]; then
+            tar -czf ../SDL2-$(./bin/sdl2-config --version)-webos-abi.tar.gz .
+          else
+            tar -czf ../SDL2-$(./bin/sdl2-config --version)-webos.tar.gz .
+          fi
+        env:
+          BUILD_WEBOS_ABI: ${{ matrix.webos-abi }}
 
       - name: Release
         if: github.event_name == 'release'
