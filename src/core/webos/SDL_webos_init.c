@@ -65,7 +65,6 @@ SDL_bool SDL_webOSAppRegistered()
 
 int SDL_webOSRegisterApp()
 {
-    int ret = 0;
     if (s_appRegistered) {
         return 0;
     }
@@ -77,8 +76,8 @@ int SDL_webOSRegisterApp()
             SDL_GetErrorMsg(errbuf, 1024);
             return SDL_SetError("Failed to get nativeLifeCycleInterfaceVersion: %s", errbuf);
         }
-        if ((ret = registerApp(appId, s_nativeLifeCycleInterfaceVersion)) != 0) {
-            return ret;
+        if (!registerApp(appId, s_nativeLifeCycleInterfaceVersion)) {
+            return -1;
         }
         if (!registerScreenSaverRequest(appId)) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Failed to register screen saver request");
@@ -178,6 +177,7 @@ static SDL_bool registerApp(const char *appId, int interfaceVersion)
         s_AppLifecycleContext.callback = lifecycleCallbackVersion2;
         uri = "luna://com.webos.applicationManager/registerApp";
     } else {
+        SDL_SetError("Unsupported nativeLifeCycleInterfaceVersion: %d", interfaceVersion);
         return SDL_FALSE;
     }
     if ((callRet = HELPERS_HLunaServiceCall(uri, payload, &s_AppLifecycleContext)) != 0) {
