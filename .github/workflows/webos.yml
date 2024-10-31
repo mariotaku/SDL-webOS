@@ -7,7 +7,8 @@ on:
     types: [ published ]
 
 jobs:
-  Build:
+  build:
+    name: "Build (webOS ABI: ${{ matrix.webos-abi }})"
     runs-on: ubuntu-latest
     strategy:
       matrix:
