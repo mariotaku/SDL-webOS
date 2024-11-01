@@ -2666,6 +2666,8 @@ void Wayland_display_destroy_input(SDL_VideoData *d)
     }
 
     if (input->pointer) {
+        // On webOS 9, we need to reset the cursor to default before quitting?
+        wl_pointer_set_cursor(input->pointer, input->pointer_enter_serial, NULL, 0, 0);
         wl_pointer_destroy(input->pointer);
     }
 
